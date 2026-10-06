@@ -1,0 +1,397 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Microsoft YaHei', 'Arial', sans-serif;
+  background: linear-gradient(to bottom, #87CEEB 0%, #98D8E8 50%, #90EE90 100%);
+  min-height: 100vh;
+  overflow: hidden;
+  user-select: none;
+}
+
+#app {
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* 屏幕基础样式 */
+.screen {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+}
+
+.screen.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  background: rgba(0, 0, 0, 0.85);
+  z-index: 1000;
+}
+
+/* 开始界面 */
+.game-title {
+  font-size: 4rem;
+  color: #FF6B6B;
+  text-shadow: 4px 4px 8px rgba(0, 0, 0, 0.3);
+  margin-bottom: 2rem;
+  animation: bounce 2s infinite;
+}
+
+@keyframes bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-20px); }
+}
+
+.game-description {
+  background: rgba(255, 255, 255, 0.95);
+  padding: 2rem;
+  border-radius: 20px;
+  max-width: 600px;
+  margin-bottom: 2rem;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+}
+
+.game-description p {
+  font-size: 1.3rem;
+  color: #333;
+  margin-bottom: 1.5rem;
+  text-align: center;
+}
+
+.instructions {
+  text-align: left;
+}
+
+.instructions h3 {
+  color: #FF6B6B;
+  margin-bottom: 1rem;
+  font-size: 1.5rem;
+}
+
+.instructions ul {
+  list-style: none;
+  margin-bottom: 1.5rem;
+}
+
+.instructions li {
+  padding: 0.5rem 0;
+  padding-left: 1.5rem;
+  position: relative;
+  font-size: 1.1rem;
+  color: #555;
+}
+
+.instructions li::before {
+  content: '🐉';
+  position: absolute;
+  left: 0;
+}
+
+.controls-info {
+  background: #F0F8FF;
+  padding: 1rem;
+  border-radius: 10px;
+  border: 2px solid #4169E1;
+}
+
+.controls-info h4 {
+  color: #4169E1;
+  margin-bottom: 0.5rem;
+}
+
+.controls-info p {
+  font-size: 1rem;
+  margin: 0.3rem 0;
+  text-align: left;
+}
+
+/* 按钮样式 */
+.btn {
+  padding: 1rem 2.5rem;
+  font-size: 1.5rem;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: all 0.3s;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+}
+
+.btn:active {
+  transform: translateY(0);
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+
+.btn-secondary {
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  color: white;
+  margin-top: 1rem;
+}
+
+.btn-small {
+  padding: 0.5rem 1rem;
+  font-size: 1rem;
+  margin: 0 0.5rem;
+}
+
+/* 游戏界面布局 */
+#game-screen {
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+}
+
+.game-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 2rem;
+  background: rgba(255, 255, 255, 0.95);
+  border-bottom: 3px solid #FF6B6B;
+  width: 100%;
+}
+
+.resource-display {
+  display: flex;
+  align-items: center;
+  font-size: 2rem;
+  font-weight: bold;
+  color: #FF8C00;
+  gap: 0.5rem;
+}
+
+.sun-icon {
+  font-size: 2.5rem;
+  animation: rotate 4s linear infinite;
+}
+
+@keyframes rotate {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.wave-display {
+  display: flex;
+  gap: 2rem;
+  font-size: 1.3rem;
+  font-weight: bold;
+  color: #333;
+}
+
+.control-buttons {
+  display: flex;
+  gap: 0.5rem;
+}
+
+/* 游戏容器 */
+.game-container {
+  display: flex;
+  flex: 1;
+  width: 100%;
+  overflow: hidden;
+}
+
+/* 角色卡片栏 */
+.card-panel {
+  width: 140px;
+  background: rgba(139, 69, 19, 0.9);
+  padding: 1rem 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  border-right: 3px solid #8B4513;
+  overflow-y: auto;
+}
+
+.character-card {
+  background: rgba(255, 255, 255, 0.95);
+  border: 3px solid #8B4513;
+  border-radius: 12px;
+  padding: 0.5rem;
+  cursor: pointer;
+  transition: all 0.3s;
+  position: relative;
+}
+
+.character-card:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  border-color: #FFD700;
+}
+
+.character-card.selected {
+  border-color: #00FF00;
+  box-shadow: 0 0 20px rgba(0, 255, 0, 0.6);
+}
+
+.character-card.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  filter: grayscale(0.8);
+}
+
+.character-card.disabled:hover {
+  transform: none;
+}
+
+.card-preview {
+  width: 100%;
+  height: 60px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 0.3rem;
+}
+
+.card-name {
+  font-size: 0.9rem;
+  font-weight: bold;
+  text-align: center;
+  color: #333;
+  margin-bottom: 0.2rem;
+}
+
+.card-cost {
+  font-size: 0.85rem;
+  text-align: center;
+  color: #FF8C00;
+  font-weight: bold;
+}
+
+.card-cooldown {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 1.5rem;
+  color: white;
+  font-weight: bold;
+  border-radius: 12px;
+}
+
+/* 画布容器 */
+.canvas-container {
+  flex: 1;
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: linear-gradient(to bottom, #87CEEB 0%, #98D8E8 30%, #90EE90 100%);
+}
+
+#game-canvas {
+  display: block;
+  background: transparent;
+  cursor: crosshair;
+  max-width: 100%;
+  max-height: 100%;
+}
+
+/* 悬停提示 */
+.hover-tooltip {
+  position: absolute;
+  background: rgba(0, 0, 0, 0.9);
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  pointer-events: none;
+  white-space: nowrap;
+  display: none;
+  z-index: 100;
+}
+
+.hover-tooltip.show {
+  display: block;
+}
+
+/* 结果面板 */
+.panel {
+  background: white;
+  padding: 3rem;
+  border-radius: 20px;
+  text-align: center;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  max-width: 500px;
+}
+
+.panel h2 {
+  font-size: 3rem;
+  margin-bottom: 1.5rem;
+}
+
+.victory-title {
+  color: #4CAF50;
+}
+
+.defeat-title {
+  color: #F44336;
+}
+
+.result-text {
+  font-size: 1.5rem;
+  color: #666;
+  margin-bottom: 1.5rem;
+}
+
+.panel p {
+  font-size: 1.3rem;
+  margin: 0.5rem 0;
+  color: #333;
+}
+
+.panel span {
+  color: #FF6B6B;
+  font-weight: bold;
+}
+
+/* 响应式调整 */
+@media (max-width: 1200px) {
+  .game-title {
+    font-size: 3rem;
+  }
+
+  .game-description {
+    max-width: 500px;
+    padding: 1.5rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .game-title {
+    font-size: 2rem;
+  }
+
+  .card-panel {
+    width: 100px;
+  }
+
+  .game-header {
+    padding: 0.5rem 1rem;
+    font-size: 0.9rem;
+  }
+}

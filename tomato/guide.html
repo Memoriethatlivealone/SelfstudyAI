@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>使用指南 - 智能导航系统</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .guide-container {
+            background: white;
+            max-width: 800px;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+        .header h1 {
+            font-size: 36px;
+            margin-bottom: 10px;
+        }
+        .header p {
+            font-size: 18px;
+            opacity: 0.9;
+        }
+        .content {
+            padding: 40px;
+        }
+        .quick-links {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+        .link-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 10px;
+            text-align: center;
+            text-decoration: none;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        .link-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+        }
+        .link-card .icon {
+            font-size: 48px;
+            margin-bottom: 10px;
+        }
+        .link-card .title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        .link-card .desc {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+        .section {
+            margin-bottom: 30px;
+        }
+        .section h2 {
+            color: #667eea;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #667eea;
+        }
+        .feature-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+        .feature-item {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            border-left: 4px solid #667eea;
+        }
+        .feature-item .icon {
+            font-size: 32px;
+            margin-bottom: 10px;
+        }
+        .feature-item .name {
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 5px;
+        }
+        .feature-item .desc {
+            font-size: 14px;
+            color: #666;
+        }
+        .steps {
+            counter-reset: step;
+        }
+        .step {
+            background: #f8f9fa;
+            padding: 20px;
+            margin-bottom: 15px;
+            border-radius: 10px;
+            position: relative;
+            padding-left: 70px;
+        }
+        .step::before {
+            counter-increment: step;
+            content: counter(step);
+            position: absolute;
+            left: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 20px;
+        }
+        .step h3 {
+            color: #333;
+            margin-bottom: 8px;
+        }
+        .step p {
+            color: #666;
+            line-height: 1.6;
+        }
+        .tips {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+        }
+        .tips h3 {
+            color: #856404;
+            margin-bottom: 10px;
+        }
+        .tips ul {
+            margin-left: 20px;
+            color: #856404;
+        }
+        .tips li {
+            margin-bottom: 5px;
+        }
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 28px;
+            }
+            .content {
+                padding: 20px;
+            }
+            .quick-links {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="guide-container">
+        <div class="header">
+            <h1>🧭 智能导航系统</h1>
+            <p>快速使用指南</p>
+        </div>
+
+        <div class="content">
+            <div class="quick-links">
+                <a href="index.html" class="link-card">
+                    <div class="icon">🚀</div>
+                    <div class="title">开始使用</div>
+                    <div class="desc">打开导航应用</div>
+                </a>
+                <a href="test.html" class="link-card">
+                    <div class="icon">🧪</div>
+                    <div class="title">功能测试</div>
+                    <div class="desc">测试系统功能</div>
+                </a>
+                <a href="README.md" class="link-card">
+                    <div class="icon">📖</div>
+                    <div class="title">完整文档</div>
+                    <div class="desc">查看详细说明</div>
+                </a>
+            </div>
+
+            <div class="section">
+                <h2>✨ 主要功能</h2>
+                <div class="feature-list">
+                    <div class="feature-item">
+                        <div class="icon">🗺️</div>
+                        <div class="name">地图浏览</div>
+                        <div class="desc">缩放、拖动、流畅交互</div>
+                    </div>
+                    <div class="feature-item">
+                        <div class="icon">🔍</div>
+                        <div class="name">地点搜索</div>
+                        <div class="desc">支持中文地名搜索</div>
+                    </div>
+                    <div class="feature-item">
+                        <div class="icon">🚗</div>
+                        <div class="name">路线规划</div>
+                        <div class="desc">驾车、步行、骑行</div>
+                    </div>
+                    <div class="feature-item">
+                        <div class="icon">📍</div>
+                        <div class="name">实时定位</div>
+                        <div class="desc">获取当前位置</div>
+                    </div>
+                    <div class="feature-item">
+                        <div class="icon">📊</div>
+                        <div class="name">路线信息</div>
+                        <div class="desc">距离、时间预估</div>
+                    </div>
+                    <div class="feature-item">
+                        <div class="icon">📱</div>
+                        <div class="name">响应式设计</div>
+                        <div class="desc">支持桌面和移动</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2>🚀 快速开始</h2>
+                <div class="steps">
+                    <div class="step">
+                        <h3>启动服务器</h3>
+                        <p>双击 <code>start.bat</code> (Windows) 或运行 <code>./start.sh</code> (Linux/Mac)，或使用命令：<code>python -m http.server 8000</code></p>
+                    </div>
+                    <div class="step">
+                        <h3>打开应用</h3>
+                        <p>在浏览器中访问 <code>http://localhost:8000</code></p>
+                    </div>
+                    <div class="step">
+                        <h3>输入起点</h3>
+                        <p>在"起点"输入框输入地址，或点击📍按钮使用当前位置，或在地图上点击选择</p>
+                    </div>
+                    <div class="step">
+                        <h3>输入终点</h3>
+                        <p>在"终点"输入框输入地址，或在地图上点击选择</p>
+                    </div>
+                    <div class="step">
+                        <h3>选择出行方式</h3>
+                        <p>选择驾车🚗、步行🚶或骑行🚴</p>
+                    </div>
+                    <div class="step">
+                        <h3>搜索路线</h3>
+                        <p>点击"🔍 搜索路线"按钮，查看路线和详细信息</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2>💡 使用技巧</h2>
+                <div class="tips">
+                    <h3>提示：</h3>
+                    <ul>
+                        <li>搜索时包含城市名称可以提高准确性（如"北京 天安门"）</li>
+                        <li>可以直接在地图上点击设置起点和终点</li>
+                        <li>按回车键可以快速触发搜索</li>
+                        <li>点击地图标记可以查看详细信息</li>
+                        <li>使用鼠标滚轮缩放地图，拖动可以平移</li>
+                        <li>定位功能需要在 HTTPS 或 localhost 下使用</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2>🎯 快速测试</h2>
+                <p>点击下面的链接直接测试路线规划：</p>
+                <div style="margin-top: 15px;">
+                    <a href="index.html?start=天安门&end=北京站" style="display: inline-block; background: #667eea; color: white; padding: 10px 20px; border-radius: 5px; text-decoration: none; margin: 5px;">
+                        北京：天安门 → 北京站
+                    </a>
+                    <a href="index.html?start=外滩&end=东方明珠" style="display: inline-block; background: #667eea; color: white; padding: 10px 20px; border-radius: 5px; text-decoration: none; margin: 5px;">
+                        上海：外滩 → 东方明珠
+                    </a>
+                    <a href="index.html?start=西湖&end=灵隐寺" style="display: inline-block; background: #667eea; color: white; padding: 10px 20px; border-radius: 5px; text-decoration: none; margin: 5px;">
+                        杭州：西湖 → 灵隐寺
+                    </a>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2>📁 项目文件</h2>
+                <ul style="line-height: 2;">
+                    <li><code>index.html</code> - 主应用页面</li>
+                    <li><code>test.html</code> - 功能测试页面</li>
+                    <li><code>guide.html</code> - 使用指南（本页面）</li>
+                    <li><code>README.md</code> - 完整项目文档</li>
+                    <li><code>PROJECT_SUMMARY.md</code> - 项目总结</li>
+                    <li><code>start.bat</code> / <code>start.sh</code> - 启动脚本</li>
+                    <li><code>css/style.css</code> - 样式文件</li>
+                    <li><code>js/*.js</code> - JavaScript 模块</li>
+                </ul>
+            </div>
+
+            <div class="section">
+                <h2>⚠️ 注意事项</h2>
+                <div style="background: #f8d7da; border-left: 4px solid #dc3545; padding: 20px; border-radius: 10px;">
+                    <ul style="margin-left: 20px; color: #721c24;">
+                        <li>建议使用本地服务器运行，避免直接双击打开 HTML</li>
+                        <li>定位功能需要 HTTPS 或 localhost 环境</li>
+                        <li>首次加载可能需要下载地图瓦片，请耐心等待</li>
+                        <li>使用免费服务，请遵守服务提供商的使用政策</li>
+                        <li>生产环境建议自建服务器或使用商业 API</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div style="text-align: center; margin-top: 40px; padding-top: 30px; border-top: 2px solid #e0e0e0;">
+                <p style="color: #666; margin-bottom: 20px;">准备好开始导航了吗？</p>
+                <a href="index.html" style="display: inline-block; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 15px 40px; border-radius: 25px; text-decoration: none; font-weight: bold; font-size: 18px;">
+                    🚀 立即开始
+                </a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

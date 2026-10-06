@@ -1,0 +1,18 @@
+{
+  "name": "claude-code-files",
+  "version": "1.0.0",
+  "description": "一个简洁美观的番茄工作法计时器，帮助你提高专注力和工作效率。",
+  "main": "script.js",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "puppeteer": "^25.12.0"
+  }
+}

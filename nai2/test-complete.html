@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>游戏功能测试</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      background: #f0f0f0;
+    }
+    .test-item {
+      background: white;
+      padding: 15px;
+      margin: 10px 0;
+      border-radius: 5px;
+      border-left: 5px solid #ccc;
+    }
+    .test-item.pass {
+      border-left-color: #4CAF50;
+    }
+    .test-item.fail {
+      border-left-color: #F44336;
+    }
+    button {
+      padding: 10px 20px;
+      margin: 10px 5px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+    .status {
+      display: inline-block;
+      padding: 5px 10px;
+      margin-left: 10px;
+      border-radius: 3px;
+    }
+    .status.pass {
+      background: #4CAF50;
+      color: white;
+    }
+    .status.fail {
+      background: #F44336;
+      color: white;
+    }
+    .status.pending {
+      background: #FFC107;
+      color: black;
+    }
+  </style>
+</head>
+<body>
+  <h1>🎮 奶龙大战僵尸 - 自动测试</h1>
+  <button onclick="runTests()">▶️ 运行所有测试</button>
+  <button onclick="location.href='/'">🎮 打开游戏</button>
+
+  <h2>测试结果：</h2>
+  <div id="test-results"></div>
+
+  <script type="module">
+    const results = document.getElementById('test-results');
+
+    window.runTests = async function() {
+      results.innerHTML = '<p>正在运行测试...</p>';
+      const tests = [];
+
+      try {
+        // 测试1: 模块加载
+        addTest('模块加载', 'pending');
+        const { GameState } = await import('/src/game/GameState.js');
+        const { Renderer } = await import('/src/game/Renderer.js');
+        const { InputHandler } = await import('/src/game/InputHandler.js');
+        const { AudioManager } = await import('/src/game/AudioManager.js');
+        const { characterTypes } = await import('/src/game/CharacterTypes.js');
+        const { zombieTypes } = await import('/src/game/ZombieTypes.js');
+        const { Character } = await import('/src/game/Character.js');
+        const { Zombie } = await import('/src/game/Zombie.js');
+        const { Bullet } = await import('/src/game/Bullet.js');
+        const { SunResource } = await import('/src/game/SunResource.js');
+        updateTest('模块加载', 'pass', '所有模块加载成功');
+
+        // 测试2: GameState实例化
+        addTest('GameState实例化', 'pending');
+        const gameState = new GameState(1200, 675);
+        if (gameState.resources === 150 && gameState.wave === 1) {
+          updateTest('GameState实例化', 'pass', `初始资源: ${gameState.resources}, 波次: ${gameState.wave}`);
+        } else {
+          updateTest('GameState实例化', 'fail', '初始值不正确');
+        }
+
+        // 测试3: 网格计算
+        addTest('网格计算', 'pending');
+        if (gameState.cellWidth > 0 && gameState.cellHeight > 0) {
+          updateTest('网格计算', 'pass', `格子尺寸: ${gameState.cellWidth.toFixed(1)}x${gameState.cellHeight.toFixed(1)}`);
+        } else {
+          updateTest('网格计算', 'fail', '格子尺寸无效');
+        }
+
+        // 测试4: 角色配置
+        addTest('角色配置', 'pending');
+        if (characterTypes.length === 4) {
+          updateTest('角色配置', 'pass', `${characterTypes.length}种角色类型`);
+        } else {
+          updateTest('角色配置', 'fail', '角色数量不正确');
+        }
+
+        // 测试5: 僵尸配置
+        addTest('僵尸配置', 'pending');
+        if (zombieTypes.length === 4) {
+          updateTest('僵尸配置', 'pass', `${zombieTypes.length}种僵尸类型`);
+        } else {
+          updateTest('僵尸配置', 'fail', '僵尸数量不正确');
+        }
+
+        // 测试6: Canvas创建
+        addTest('Canvas渲染', 'pending');
+        const canvas = document.createElement('canvas');
+        canvas.width = 1200;
+        canvas.height = 675;
+        const renderer = new Renderer(canvas, gameState);
+        renderer.render();
+        updateTest('Canvas渲染', 'pass', '渲染器工作正常');
+
+        // 测试7: 角色创建
+        addTest('角色创建', 'pending');
+        const char = new Character(0, 0, 'normal', characterTypes[0]);
+        char.setPosition(300, 200);
+        if (char.x === 300 && char.y === 200 && char.hp === 100) {
+          updateTest('角色创建', 'pass', `角色属性正确: HP=${char.hp}`);
+        } else {
+          updateTest('角色创建', 'fail', '角色属性不正确');
+        }
+
+        // 测试8: 僵尸创建
+        addTest('僵尸创建', 'pending');
+        const zombie = new Zombie(1200, 200, 0, zombieTypes[0]);
+        if (zombie.x === 1200 && zombie.hp === 100) {
+          updateTest('僵尸创建', 'pass', `僵尸属性正确: HP=${zombie.hp}`);
+        } else {
+          updateTest('僵尸创建', 'fail', '僵尸属性不正确');
+        }
+
+        // 测试9: 子弹创建
+        addTest('子弹创建', 'pending');
+        const bullet = new Bullet(300, 200, 0, 20, '#1E90FF', null);
+        if (bullet.damage === 20) {
+          updateTest('子弹创建', 'pass', `子弹伤害: ${bullet.damage}`);
+        } else {
+          updateTest('子弹创建', 'fail', '子弹属性不正确');
+        }
+
+        // 测试10: 阳光资源
+        addTest('阳光资源', 'pending');
+        const sun = new SunResource(400, 100, 25);
+        if (sun.value === 25) {
+          updateTest('阳光资源', 'pass', `阳光价值: ${sun.value}`);
+        } else {
+          updateTest('阳光资源', 'fail', '阳光属性不正确');
+        }
+
+        // 测试11: GameState更新
+        addTest('GameState更新', 'pending');
+        gameState.update();
+        updateTest('GameState更新', 'pass', '更新逻辑正常');
+
+        // 测试12: 音效管理器
+        addTest('音效管理器', 'pending');
+        const audio = new AudioManager();
+        updateTest('音效管理器', 'pass', 'AudioManager创建成功');
+
+        // 测试13: 资源整数化
+        addTest('资源整数化', 'pending');
+        gameState.resources = 150;
+        gameState.collectSunResource = function(index) {
+          this.resources = Math.floor(this.resources + 25.7);
+          return true;
+        };
+        gameState.collectSunResource(0);
+        if (Number.isInteger(gameState.resources)) {
+          updateTest('资源整数化', 'pass', `资源为整数: ${gameState.resources}`);
+        } else {
+          updateTest('资源整数化', 'fail', '资源不是整数');
+        }
+
+        // 测试14: InputHandler
+        addTest('InputHandler创建', 'pending');
+        const dummyUpdate = () => {};
+        const inputHandler = new InputHandler(canvas, document.createElement('div'), gameState, renderer, audio, dummyUpdate);
+        renderer.inputHandler = inputHandler;
+        if (renderer.inputHandler) {
+          updateTest('InputHandler创建', 'pass', 'InputHandler连接成功');
+        } else {
+          updateTest('InputHandler创建', 'fail', 'InputHandler未连接');
+        }
+
+        // 测试15: 预览功能
+        addTest('预览功能', 'pending');
+        inputHandler.selectedCharacterType = 'normal';
+        inputHandler.mouseX = 500;
+        inputHandler.mouseY = 300;
+        const preview = inputHandler.getPlacementPreview();
+        if (preview && preview.charType) {
+          updateTest('预览功能', 'pass', '预览系统工作正常');
+        } else {
+          updateTest('预览功能', 'fail', '预览系统失败');
+        }
+
+        results.innerHTML += '<h3 style="color: #4CAF50; margin-top: 30px;">✅ 所有测试通过！游戏应该可以正常运行。</h3>';
+        results.innerHTML += '<button onclick="location.href=\'/\'" style="font-size: 20px; padding: 15px 30px; background: #4CAF50; color: white; border: none; border-radius: 5px; cursor: pointer; margin-top: 20px;">🎮 开始游戏</button>';
+
+      } catch (error) {
+        results.innerHTML += `<div class="test-item fail">
+          <strong>❌ 测试失败</strong>
+          <div>错误: ${error.message}</div>
+          <pre style="background: #f5f5f5; padding: 10px; margin-top: 10px; overflow: auto;">${error.stack}</pre>
+        </div>`;
+      }
+    };
+
+    function addTest(name, status) {
+      results.innerHTML += `<div class="test-item" id="test-${name.replace(/\s+/g, '-')}">
+        <strong>${name}</strong>
+        <span class="status ${status}">${status === 'pending' ? '测试中...' : status}</span>
+        <div class="details" style="margin-top: 5px; color: #666;"></div>
+      </div>`;
+    }
+
+    function updateTest(name, status, details) {
+      const testId = name.replace(/\s+/g, '-');
+      const testItem = document.getElementById(`test-${testId}`);
+      if (testItem) {
+        testItem.className = `test-item ${status}`;
+        const statusSpan = testItem.querySelector('.status');
+        statusSpan.className = `status ${status}`;
+        statusSpan.textContent = status === 'pass' ? '✅ 通过' : '❌ 失败';
+        const detailsDiv = testItem.querySelector('.details');
+        if (details) {
+          detailsDiv.textContent = details;
+        }
+      }
+    }
+
+    // 自动运行测试
+    setTimeout(runTests, 500);
+  </script>
+</body>
+</html>

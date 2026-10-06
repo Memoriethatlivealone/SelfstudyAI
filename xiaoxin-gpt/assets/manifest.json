@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "小新大冒险资源清单",
+  "description": "预留资源接口，可替换为授权素材",
+  "version": "1.0.0",
+  "assets": {
+    "characters": {
+      "player": {
+        "type": "spritesheet",
+        "path": "characters/player.png",
+        "frameWidth": 32,
+        "frameHeight": 48,
+        "animations": {
+          "idle": {"frames": [0, 1, 2, 3], "fps": 8},
+          "walk": {"frames": [4, 5, 6, 7, 8, 9], "fps": 12},
+          "jump": {"frames": [10, 11], "fps": 8},
+          "dash": {"frames": [12, 13, 14], "fps": 15},
+          "hurt": {"frames": [15], "fps": 1}
+        }
+      }
+    },
+    "audio": {
+      "bgm": {
+        "title": "audio/bgm/title.ogg",
+        "level1": "audio/bgm/level1.ogg",
+        "boss": "audio/bgm/boss.ogg"
+      },
+      "sfx": {
+        "jump": "audio/sfx/jump.wav",
+        "dash": "audio/sfx/dash.wav",
+        "collect": "audio/sfx/collect.wav",
+        "hurt": "audio/sfx/hurt.wav"
+      }
+    },
+    "fonts": {
+      "title": {
+        "path": "fonts/title.ttf",
+        "sizes": [48, 32, 24]
+      },
+      "ui": {
+        "path": "fonts/ui.ttf",
+        "sizes": [20, 16]
+      }
+    }
+  },
+  "note": "所有资源路径相对于 assets/ 目录。当前使用原创几何模型占位，可替换为授权的《蜡笔小新》素材。"
+}

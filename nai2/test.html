@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>游戏调试测试</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      background: #f0f0f0;
+    }
+    .test-section {
+      background: white;
+      padding: 20px;
+      margin: 10px 0;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .success { color: green; }
+    .error { color: red; }
+    button {
+      padding: 10px 20px;
+      margin: 5px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <h1>奶龙大战僵尸 - 调试测试</h1>
+
+  <div class="test-section">
+    <h2>模块加载测试</h2>
+    <div id="module-test">测试中...</div>
+  </div>
+
+  <div class="test-section">
+    <h2>游戏初始化测试</h2>
+    <button onclick="testGameInit()">测试游戏初始化</button>
+    <div id="init-test"></div>
+  </div>
+
+  <div class="test-section">
+    <h2>Canvas测试</h2>
+    <canvas id="test-canvas" width="200" height="200" style="border: 1px solid black;"></canvas>
+    <button onclick="testCanvas()">测试Canvas绘制</button>
+  </div>
+
+  <div class="test-section">
+    <h2>控制台日志</h2>
+    <div id="console-log" style="font-family: monospace; white-space: pre-wrap;"></div>
+  </div>
+
+  <script type="module">
+    const consoleLog = document.getElementById('console-log');
+    const moduleTest = document.getElementById('module-test');
+
+    // 捕获控制台输出
+    const originalLog = console.log;
+    const originalError = console.error;
+
+    console.log = function(...args) {
+      originalLog.apply(console, args);
+      consoleLog.textContent += 'LOG: ' + args.join(' ') + '\n';
+    };
+
+    console.error = function(...args) {
+      originalError.apply(console, args);
+      consoleLog.textContent += 'ERROR: ' + args.join(' ') + '\n';
+    };
+
+    // 测试模块加载
+    try {
+      const { GameState } = await import('/src/game/GameState.js');
+      const { Renderer } = await import('/src/game/Renderer.js');
+      const { InputHandler } = await import('/src/game/InputHandler.js');
+      const { AudioManager } = await import('/src/game/AudioManager.js');
+      const { characterTypes } = await import('/src/game/CharacterTypes.js');
+      const { zombieTypes } = await import('/src/game/ZombieTypes.js');
+
+      moduleTest.innerHTML = '<span class="success">✓ 所有模块加载成功！</span>';
+      moduleTest.innerHTML += '<br>GameState: ' + typeof GameState;
+      moduleTest.innerHTML += '<br>Renderer: ' + typeof Renderer;
+      moduleTest.innerHTML += '<br>InputHandler: ' + typeof InputHandler;
+      moduleTest.innerHTML += '<br>AudioManager: ' + typeof AudioManager;
+      moduleTest.innerHTML += '<br>角色类型数量: ' + characterTypes.length;
+      moduleTest.innerHTML += '<br>僵尸类型数量: ' + zombieTypes.length;
+
+      // 测试游戏初始化
+      window.testGameInit = async function() {
+        const initTest = document.getElementById('init-test');
+        try {
+          initTest.innerHTML = '正在测试...';
+
+          // 创建游戏状态
+          const gameState = new GameState(800, 600);
+          initTest.innerHTML = '<span class="success">✓ GameState 创建成功</span>';
+          initTest.innerHTML += '<br>资源: ' + gameState.resources;
+          initTest.innerHTML += '<br>波次: ' + gameState.wave;
+          initTest.innerHTML += '<br>网格: ' + gameState.rows + 'x' + gameState.cols;
+
+          // 创建测试canvas
+          const canvas = document.createElement('canvas');
+          canvas.width = 800;
+          canvas.height = 600;
+
+          // 创建渲染器
+          const renderer = new Renderer(canvas, gameState);
+          initTest.innerHTML += '<br><span class="success">✓ Renderer 创建成功</span>';
+
+          // 创建音效管理器
+          const audioManager = new AudioManager();
+          initTest.innerHTML += '<br><span class="success">✓ AudioManager 创建成功</span>';
+
+          // 测试更新
+          gameState.update();
+          initTest.innerHTML += '<br><span class="success">✓ GameState.update() 正常</span>';
+
+          // 测试渲染
+          renderer.render();
+          initTest.innerHTML += '<br><span class="success">✓ Renderer.render() 正常</span>';
+
+        } catch (error) {
+          initTest.innerHTML = '<span class="error">✗ 错误: ' + error.message + '</span>';
+          console.error('初始化错误:', error);
+        }
+      };
+
+    } catch (error) {
+      moduleTest.innerHTML = '<span class="error">✗ 模块加载失败: ' + error.message + '</span>';
+      console.error('模块加载错误:', error);
+    }
+
+    // Canvas测试
+    window.testCanvas = function() {
+      const canvas = document.getElementById('test-canvas');
+      const ctx = canvas.getContext('2d');
+
+      // 清空
+      ctx.clearRect(0, 0, 200, 200);
+
+      // 绘制背景
+      ctx.fillStyle = '#90EE90';
+      ctx.fillRect(0, 0, 200, 200);
+
+      // 绘制测试角色
+      ctx.fillStyle = '#4169E1';
+      ctx.beginPath();
+      ctx.arc(100, 100, 30, 0, Math.PI * 2);
+      ctx.fill();
+
+      // 绘制眼睛
+      ctx.fillStyle = 'white';
+      ctx.beginPath();
+      ctx.arc(90, 90, 8, 0, Math.PI * 2);
+      ctx.arc(110, 90, 8, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.fillStyle = 'black';
+      ctx.beginPath();
+      ctx.arc(90, 90, 4, 0, Math.PI * 2);
+      ctx.arc(110, 90, 4, 0, Math.PI * 2);
+      ctx.fill();
+
+      alert('Canvas绘制测试完成！');
+    };
+  </script>
+</body>
+</html>

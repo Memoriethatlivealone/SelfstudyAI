@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>智能导航系统</title>
+
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+    <!-- 自定义样式 -->
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="container">
+        <!-- 侧边栏 -->
+        <div class="sidebar">
+            <h1>🧭 智能导航</h1>
+
+            <!-- 搜索和路线规划 -->
+            <div class="search-panel">
+                <div class="input-group">
+                    <label for="start">起点</label>
+                    <input type="text" id="start" placeholder="输入起点地址或点击地图选择" />
+                    <button class="btn-small" id="use-current-location" title="使用当前位置">📍</button>
+                </div>
+
+                <div class="input-group">
+                    <label for="end">终点</label>
+                    <input type="text" id="end" placeholder="输入终点地址或点击地图选择" />
+                </div>
+
+                <!-- 路线类型选择 -->
+                <div class="route-type">
+                    <label>路线类型：</label>
+                    <div class="route-type-buttons">
+                        <button class="route-btn active" data-profile="driving-car">🚗 驾车</button>
+                        <button class="route-btn" data-profile="foot-walking">🚶 步行</button>
+                        <button class="route-btn" data-profile="cycling-regular">🚴 骑行</button>
+                    </div>
+                </div>
+
+                <!-- 操作按钮 -->
+                <div class="action-buttons">
+                    <button class="btn btn-primary" id="search-route">🔍 搜索路线</button>
+                    <button class="btn btn-secondary" id="clear-route">🗑️ 清空</button>
+                </div>
+            </div>
+
+            <!-- 路线信息 -->
+            <div class="route-info" id="route-info" style="display: none;">
+                <h3>路线信息</h3>
+                <div class="info-item">
+                    <span class="label">总距离：</span>
+                    <span class="value" id="distance">--</span>
+                </div>
+                <div class="info-item">
+                    <span class="label">预计时间：</span>
+                    <span class="value" id="duration">--</span>
+                </div>
+                <div class="info-item">
+                    <span class="label">路线类型：</span>
+                    <span class="value" id="route-type">--</span>
+                </div>
+            </div>
+
+            <!-- 状态提示 -->
+            <div class="status-message" id="status-message"></div>
+
+            <!-- 搜索建议 -->
+            <div class="search-suggestions" id="search-suggestions"></div>
+        </div>
+
+        <!-- 地图容器 -->
+        <div class="map-container">
+            <div id="map"></div>
+
+            <!-- 加载动画 -->
+            <div class="loading-overlay" id="loading-overlay">
+                <div class="spinner"></div>
+                <p>加载中...</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <!-- 应用模块 -->
+    <script src="js/config.js"></script>
+    <script src="js/mapService.js"></script>
+    <script src="js/searchService.js"></script>
+    <script src="js/routeService.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>

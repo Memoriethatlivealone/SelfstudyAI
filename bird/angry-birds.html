@@ -1,0 +1,1665 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>愤怒的小鸟 · Canvas 复刻版</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body {
+    width: 100%; height: 100%;
+    background: radial-gradient(circle at 50% 0%, #2a3a52 0%, #12171f 70%);
+    display: flex; align-items: center; justify-content: center;
+    overflow: hidden;
+    font-family: system-ui, -apple-system, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    -webkit-tap-highlight-color: transparent;
+    -webkit-user-select: none; user-select: none;
+  }
+  /* --u 由 JS 按画布实际缩放比例写入，保证 UI 随画面等比缩放 */
+  #game {
+    position: relative;
+    line-height: 0;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 20px 60px rgba(0,0,0,.6), 0 0 0 1px rgba(255,255,255,.06);
+    --u: 1px;
+  }
+  canvas { display: block; touch-action: none; cursor: crosshair; }
+
+  .screen {
+    position: absolute; inset: 0;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    gap: calc(14 * var(--u));
+    background: rgba(9, 18, 30, .74);
+    -webkit-backdrop-filter: blur(4px); backdrop-filter: blur(4px);
+    color: #fff; text-align: center; line-height: 1.35;
+    transition: opacity .28s ease;
+    padding: calc(20 * var(--u));
+  }
+  .screen.hidden { opacity: 0; pointer-events: none; }
+  .screen.hidden { display: none; }
+
+  .title {
+    font-size: calc(76 * var(--u));
+    font-weight: 900;
+    letter-spacing: calc(3 * var(--u));
+    background: linear-gradient(180deg, #ffe066 0%, #ff8c26 55%, #e8452c 100%);
+    -webkit-background-clip: text; background-clip: text;
+    color: transparent;
+    filter: drop-shadow(0 calc(3 * var(--u)) 0 rgba(0,0,0,.45));
+    white-space: nowrap;
+  }
+  .subtitle { font-size: calc(24 * var(--u)); color: #b9cbe0; letter-spacing: calc(1 * var(--u)); }
+  .tip { font-size: calc(21 * var(--u)); color: #8fa6bd; line-height: 1.7; }
+  .tip b { color: #ffd24d; }
+
+  .btn {
+    margin-top: calc(10 * var(--u));
+    font-family: inherit;
+    font-size: calc(32 * var(--u));
+    font-weight: 800;
+    letter-spacing: calc(2 * var(--u));
+    color: #fff;
+    padding: calc(14 * var(--u)) calc(52 * var(--u));
+    border: none;
+    border-radius: calc(999 * var(--u));
+    cursor: pointer;
+    background: linear-gradient(180deg, #ffb02e 0%, #f5821f 48%, #d9541a 100%);
+    box-shadow: 0 calc(6 * var(--u)) 0 #96340e, 0 calc(12 * var(--u)) calc(22 * var(--u)) rgba(0,0,0,.4);
+    transition: transform .09s ease, box-shadow .09s ease, filter .15s ease;
+  }
+  .btn:hover { filter: brightness(1.08); }
+  .btn:active {
+    transform: translateY(calc(5 * var(--u)));
+    box-shadow: 0 calc(1 * var(--u)) 0 #96340e, 0 calc(4 * var(--u)) calc(10 * var(--u)) rgba(0,0,0,.4);
+  }
+
+  .result-win {
+    font-size: calc(64 * var(--u)); font-weight: 900; letter-spacing: calc(4 * var(--u));
+    background: linear-gradient(180deg, #b8f36a, #4fbb2a);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+    filter: drop-shadow(0 calc(3 * var(--u)) 0 rgba(0,0,0,.45));
+  }
+  .result-lose {
+    font-size: calc(64 * var(--u)); font-weight: 900; letter-spacing: calc(4 * var(--u));
+    background: linear-gradient(180deg, #ff9b8a, #d63a2a);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+    filter: drop-shadow(0 calc(3 * var(--u)) 0 rgba(0,0,0,.45));
+  }
+  .score-board {
+    margin-top: calc(6 * var(--u));
+    padding: calc(20 * var(--u)) calc(44 * var(--u));
+    border-radius: calc(18 * var(--u));
+    background: rgba(255,255,255,.07);
+    border: 1px solid rgba(255,255,255,.12);
+    font-size: calc(24 * var(--u));
+    color: #dbe8f5;
+    min-width: calc(360 * var(--u));
+  }
+  .score-board .row { display: flex; justify-content: space-between; gap: calc(40 * var(--u)); padding: calc(5 * var(--u)) 0; }
+  .score-board .row span:last-child { color: #ffd24d; font-weight: 700; }
+  .score-board .total {
+    margin-top: calc(10 * var(--u)); padding-top: calc(12 * var(--u));
+    border-top: 1px dashed rgba(255,255,255,.22);
+    font-size: calc(34 * var(--u)); color: #fff; font-weight: 900;
+  }
+  .score-board .total span:last-child { color: #7ee06a; }
+</style>
+</head>
+<body>
+
+<div id="game">
+  <canvas id="cv"></canvas>
+
+  <!-- ===== 开始界面 ===== -->
+  <div class="screen" id="startScreen">
+    <div class="title">愤怒的小鸟</div>
+    <div class="subtitle">ANGRY BIRDS · CANVAS EDITION</div>
+    <div class="tip" style="margin-top:8px">
+      拖拽小鸟向后拉伸橡皮筋，松手发射<br>
+      消灭关卡内 <b>所有小猪</b> 即可获胜
+    </div>
+    <button class="btn" id="btnStart">开 始 游 戏</button>
+  </div>
+
+  <!-- ===== 结算界面 ===== -->
+  <div class="screen hidden" id="endScreen">
+    <div id="endTitle" class="result-win">胜 利 ！</div>
+    <div class="score-board">
+      <div class="row"><span>小猪消灭</span><span id="stPigs">0 × 5000</span></div>
+      <div class="row"><span>木块摧毁</span><span id="stWood">0 × 500</span></div>
+      <div class="row"><span>石块摧毁</span><span id="stStone">0 × 1000</span></div>
+      <div class="row"><span>剩余小鸟奖励</span><span id="stBonus">0 × 10000</span></div>
+      <div class="row total"><span>最终得分</span><span id="stTotal">0</span></div>
+    </div>
+    <button class="btn" id="btnRestart">重 新 开 始</button>
+  </div>
+</div>
+
+<script>
+(function () {
+'use strict';
+
+/* =========================================================================
+   1. 常量与工具
+   ========================================================================= */
+const W = 1280, H = 720;          // 逻辑分辨率（世界坐标）
+const GROUND_Y = 640;             // 地面上表面 y
+const GRAVITY = 1500;             // 重力加速度 px/s²
+const SUBSTEPS = 4;               // 每帧物理子步数（提升堆叠稳定性）
+const FIXED_DT = 1 / 60;          // 固定物理步长
+
+const SLING = { x: 190, y: 470 };// 弹弓皮兜（小鸟待发位置）
+const MAX_STRETCH = 120;          // 最大拉伸像素
+const LAUNCH_POWER = 12.5;        // 拉伸像素 → 速度 的换算系数（满拉 ≈1500 px/s，射程约 1450px）
+const MIN_STRETCH = 12;           // 低于此拉伸量视为取消发射
+
+const BIRD_R = 18;
+const PIG_R  = 20;
+// 伤害模型：以"撞击前的法向接近速度"为准，再乘以攻方/受方的质量比加成。
+// 静止支撑与轻微碰撞的接近速度接近 0，天然不会掉血；速度越快伤害越高；
+// 重的物体砸中轻的物体（例如倒塌的石板压木柱）伤害额外放大。
+const SPD_MIN = 200;              // 低于该接近速度不造成伤害
+const SPD_DIV = 900;              // (速度 - SPD_MIN) / SPD_DIV = 基础伤害
+const HP_DIV  = 3200;             // 障碍物血量 = hpBase × 面积 / HP_DIV
+const MASS_MIN = 0.5, MASS_MAX = 2.0;   // 质量比加成上下限
+
+const SCORE = { pig: 5000, wood: 500, stone: 1000, birdBonus: 10000 };
+
+const clamp = (v, a, b) => (v < a ? a : (v > b ? b : v));
+const rand  = (a, b) => a + Math.random() * (b - a);
+const len   = (x, y) => Math.sqrt(x * x + y * y);
+const TAU   = Math.PI * 2;
+
+// 圆角矩形路径
+function roundRect(c, x, y, w, h, r) {
+  r = Math.min(r, Math.abs(w) / 2, Math.abs(h) / 2);
+  c.beginPath();
+  c.moveTo(x + r, y);
+  c.arcTo(x + w, y, x + w, y + h, r);
+  c.arcTo(x + w, y + h, x, y + h, r);
+  c.arcTo(x, y + h, x, y, r);
+  c.arcTo(x, y, x + w, y, r);
+  c.closePath();
+}
+
+/* =========================================================================
+   2. 画布初始化与自适应
+   ========================================================================= */
+const canvas = document.getElementById('cv');
+const ctx = canvas.getContext('2d');
+const gameEl = document.getElementById('game');
+
+let viewScale = 1;
+
+function resize() {
+  const pad = 24;
+  const availW = Math.max(240, window.innerWidth - pad);
+  const availH = Math.max(160, window.innerHeight - pad);
+  viewScale = Math.min(availW / W, availH / H);
+
+  const cssW = Math.round(W * viewScale);
+  const cssH = Math.round(H * viewScale);
+  canvas.style.width = cssW + 'px';
+  canvas.style.height = cssH + 'px';
+  gameEl.style.width = cssW + 'px';
+  gameEl.style.height = cssH + 'px';
+  // UI 按同一比例缩放
+  gameEl.style.setProperty('--u', viewScale.toFixed(4) + 'px');
+
+  // 高清屏适配（DPR 上限 2，避免 4K 屏像素爆炸）
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  canvas.width = Math.round(W * viewScale * dpr);
+  canvas.height = Math.round(H * viewScale * dpr);
+  ctx.setTransform(viewScale * dpr, 0, 0, viewScale * dpr, 0, 0);
+  ctx.imageSmoothingEnabled = true;
+}
+window.addEventListener('resize', resize);
+window.addEventListener('orientationchange', () => setTimeout(resize, 120));
+
+// 屏幕坐标 → 世界坐标
+function toWorld(e) {
+  const r = canvas.getBoundingClientRect();
+  return {
+    x: (e.clientX - r.left) / r.width * W,
+    y: (e.clientY - r.top) / r.height * H
+  };
+}
+
+/* =========================================================================
+   3. 刚体与物理世界
+   ========================================================================= */
+function makeBody(o) {
+  const b = Object.assign({
+    type: 'circle', x: 0, y: 0, vx: 0, vy: 0,
+    r: 0, hw: 0, hh: 0, w: 0, h: 0,
+    mass: 1, invMass: 1,
+    isStatic: false,
+    restitution: 0.15, friction: 0.5,
+    kind: 'block', hp: Infinity, maxHp: Infinity,
+    dead: false, contacts: 0, angle: 0, seed: Math.random(),
+    preVn: 0, hidden: false
+  }, o);
+  if (b.isStatic) { b.invMass = 0; b.mass = Infinity; }
+  else { b.invMass = 1 / b.mass; }
+  return b;
+}
+
+/** 圆形刚体：质量 = π r² · density / 1000 */
+function circleBody(x, y, r, density, kind, opts) {
+  const mass = Math.PI * r * r * density / 1000;
+  return makeBody(Object.assign({ type: 'circle', x, y, r, mass, kind }, opts || {}));
+}
+
+/** 矩形刚体：质量 = w · h · density / 1000 */
+function boxBody(x, y, w, h, density, kind, opts) {
+  const mass = w * h * density / 1000;
+  return makeBody(Object.assign({
+    type: 'box', x, y, w, h, hw: w / 2, hh: h / 2,
+    mass, kind, restitution: 0.12, friction: 0.62
+  }, opts || {}));
+}
+
+/* ---------- 碰撞检测：n 均由 A 指向 B ---------- */
+
+// 圆 vs 圆
+function circleCircle(a, b) {
+  let dx = b.x - a.x, dy = b.y - a.y;
+  const rr = a.r + b.r;
+  const d2 = dx * dx + dy * dy;
+  if (d2 > rr * rr) return null;
+  let d = Math.sqrt(d2);
+  if (d < 1e-6) { dx = 0; dy = -1; d = 1; }
+  const nx = dx / d, ny = dy / d;
+  return { nx, ny, pen: rr - d, px: a.x + nx * a.r, py: a.y + ny * a.r };
+}
+
+// 圆 vs 轴对齐矩形
+function circleBox(c, b) {
+  const cx = clamp(c.x, b.x - b.hw, b.x + b.hw);
+  const cy = clamp(c.y, b.y - b.hh, b.y + b.hh);
+  const dx = c.x - cx, dy = c.y - cy;
+  const d2 = dx * dx + dy * dy;
+  if (d2 > c.r * c.r) return null;
+
+  if (d2 > 1e-9) {
+    const d = Math.sqrt(d2);
+    // 法线由圆指向矩形
+    return { nx: -dx / d, ny: -dy / d, pen: c.r - d, px: cx, py: cy };
+  }
+  // 圆心陷入矩形内部：沿最小穿透轴推出
+  const ox = b.hw - Math.abs(c.x - b.x);
+  const oy = b.hh - Math.abs(c.y - b.y);
+  if (ox < oy) return { nx: c.x > b.x ? -1 : 1, ny: 0, pen: ox + c.r, px: c.x, py: c.y };
+  return { nx: 0, ny: c.y > b.y ? -1 : 1, pen: oy + c.r, px: c.x, py: c.y };
+}
+
+// 轴对齐矩形 vs 轴对齐矩形
+function boxBox(a, b) {
+  const dx = b.x - a.x, dy = b.y - a.y;
+  const ox = (a.hw + b.hw) - Math.abs(dx);
+  if (ox <= 0) return null;
+  const oy = (a.hh + b.hh) - Math.abs(dy);
+  if (oy <= 0) return null;
+  const px = a.x + dx * 0.5, py = a.y + dy * 0.5;
+  if (ox < oy) return { nx: dx > 0 ? 1 : -1, ny: 0, pen: ox, px, py };
+  return { nx: 0, ny: dy > 0 ? 1 : -1, pen: oy, px, py };
+}
+
+function collide(a, b) {
+  if (a.type === 'circle') {
+    if (b.type === 'circle') return circleCircle(a, b);
+    return circleBox(a, b);                       // a=圆 b=矩形
+  }
+  if (b.type === 'circle') {
+    const m = circleBox(b, a);                    // 以 b 为圆求解
+    if (m) { m.nx = -m.nx; m.ny = -m.ny; }        // 反转法线方向
+    return m;
+  }
+  return boxBox(a, b);
+}
+
+/* ---------- 冲量求解 ---------- */
+function resolve(a, b, m) {
+  const invSum = a.invMass + b.invMass;
+  if (invSum === 0) return;
+
+  // ① 位置修正，消除穿透（留出 slop 容差，避免抖动）
+  const corr = Math.max(m.pen - 0.25, 0) / invSum * 0.7;
+  if (corr > 0) {
+    a.x -= m.nx * corr * a.invMass; a.y -= m.ny * corr * a.invMass;
+    b.x += m.nx * corr * b.invMass; b.y += m.ny * corr * b.invMass;
+  }
+
+  // ② 法向速度
+  const rvx = b.vx - a.vx, rvy = b.vy - a.vy;
+  const vn = rvx * m.nx + rvy * m.ny;
+  if (vn > 0) return;                             // 已在分离，无需冲量
+  // 记下撞击前的接近速度，供伤害计算使用（求解后速度就被改写了）
+  a.preVn = b.preVn = vn;
+
+  // 低速接触取消弹性，是堆叠稳定的关键
+  let e = Math.min(a.restitution, b.restitution);
+  if (-vn < 95) e = 0;
+
+  const j = -(1 + e) * vn / invSum;
+
+  // ③ 切向摩擦（库仑摩擦锥裁剪）
+  const tx = -m.ny, ty = m.nx;
+  const vt = rvx * tx + rvy * ty;
+  const mu = Math.sqrt(a.friction * b.friction);
+  let jt = -vt / invSum;
+  const maxJt = j * mu;
+  jt = clamp(jt, -maxJt, maxJt);
+
+  a.vx -= (j * m.nx + jt * tx) * a.invMass;
+  a.vy -= (j * m.ny + jt * ty) * a.invMass;
+  b.vx += (j * m.nx + jt * tx) * b.invMass;
+  b.vy += (j * m.ny + jt * ty) * b.invMass;
+
+  a.contacts++; b.contacts++;
+  onImpact(a, b, j);
+}
+
+/* =========================================================================
+   4. 游戏状态
+   ========================================================================= */
+const G = {
+  state: 'menu',            // menu | playing | win | lose
+  score: 0,
+  birdsUsed: 0,
+  birdsTotal: 4,
+  pigsLeft: 0,
+  bodies: [],
+  particles: [],
+  floaters: [],
+  trail: [],
+  currentBird: null,        // 弹弓上待发射的小鸟（不在 bodies 中）
+  flyingBird: null,         // 正在飞行的小鸟
+  dragging: false,
+  restTimer: 0,
+  flightTime: 0,
+  endTimer: 0,
+  shake: 0,
+  time: 0,
+  kills: { pig: 0, wood: 0, stone: 0 }
+};
+
+/* =========================================================================
+   5. 关卡数据（易于扩展：复制一份改数值即可）
+   ========================================================================= */
+const LEVEL_1 = {
+  birds: 4,
+  // [材质, 中心x, 中心y, 宽, 高]
+  // 布局要点：二层立柱（y 416~536）正好落在小鸟的平射弹道高度上，
+  // 让 15°~25° 的中低角度能直接砸中二层楼板与立柱，而不是从屋顶掠过。
+  blocks: [
+    // ---- 一层 ----
+    ['wood',   890, 600,  24,  80],   // 左立柱
+    ['wood',  1070, 600,  24,  80],   // 右立柱
+    ['wood',   980, 548, 240,  24],   // 楼板
+    // ---- 二层 ----
+    ['wood',   940, 476,  24, 120],   // 左立柱
+    ['wood',  1020, 476,  24, 120],   // 右立柱
+    ['stone',  980, 404, 160,  24],   // 二层横梁
+    // ---- 屋顶 ----
+    ['stone',  980, 380, 120,  24],   // 石板屋顶
+    // ---- 右侧掩体 ----
+    ['stone', 1230, 610,  24,  60]
+  ],
+  // [中心x, 中心y]
+  pigs: [
+    [ 980, 620],   // 一层屋内
+    [ 980, 500],   // 二层屋内
+    [1150, 620]    // 右侧空地
+  ]
+};
+
+const MAT = {
+  wood:  { density: 1.0, hpBase: 1.0, restitution: 0.12, friction: 0.62 },
+  stone: { density: 2.6, hpBase: 4.0, restitution: 0.08, friction: 0.55 }
+};
+
+/* =========================================================================
+   6. 关卡构建
+   ========================================================================= */
+function buildLevel(lv) {
+  G.bodies = [];
+  G.pigsLeft = 0;
+
+  // 地面（静态，不参与绘制，仅用于碰撞）
+  G.bodies.push(boxBody(W / 2, GROUND_Y + 250, W * 3, 500, 100, 'ground', {
+    isStatic: true, hidden: true, restitution: 0.22, friction: 0.85
+  }));
+  // 左右隐形边界墙（防止物体无限飞出，放在视野之外）
+  G.bodies.push(boxBody(-460, H / 2, 80, H * 4, 100, 'wall', {
+    isStatic: true, hidden: true, restitution: 0.1, friction: 0.6
+  }));
+  G.bodies.push(boxBody(W + 460, H / 2, 80, H * 4, 100, 'wall', {
+    isStatic: true, hidden: true, restitution: 0.1, friction: 0.6
+  }));
+
+  // 障碍物
+  for (const [mat, x, y, w, h] of lv.blocks) {
+    const cfg = MAT[mat];
+    const b = boxBody(x, y, w, h, cfg.density, mat, {
+      restitution: cfg.restitution, friction: cfg.friction
+    });
+    // 血量与体积正相关，经实测调参：一根标准木柱约需要 4~5 次强力撞击才会碎裂
+    b.maxHp = b.hp = cfg.hpBase * (w * h) / HP_DIV;
+    G.bodies.push(b);
+  }
+
+  // 小猪
+  for (const [x, y] of lv.pigs) {
+    const p = circleBody(x, y, PIG_R, 1.2, 'pig', {
+      restitution: 0.2, friction: 0.55
+    });
+    p.maxHp = p.hp = 1.0;
+    G.bodies.push(p);
+    G.pigsLeft++;
+  }
+}
+
+/* =========================================================================
+   7. 伤害 / 销毁 / 计分
+   ========================================================================= */
+function onImpact(a, b, j) {
+  const byBird = (a.kind === 'bird' || b.kind === 'bird');
+  const byHeavy = (a.kind === 'wood' || a.kind === 'stone' ||
+                   b.kind === 'wood' || b.kind === 'stone');
+  // 撞击前的法向接近速度：求解冲量后速度已被改写，要在 resolve 里提前记下来
+  const vApproach = Math.abs(b.preVn || 0);
+  const impact = Math.hypot(a.vx - b.vx, a.vy - b.vy);
+
+  if (vApproach > SPD_MIN) {
+    const base = (vApproach - SPD_MIN) / SPD_DIV;
+    const ma = a.isStatic ? b.mass : a.mass;
+    const mb = b.isStatic ? a.mass : b.mass;
+    const ratio = clamp(Math.max(ma, mb) / Math.max(0.001, Math.min(ma, mb)),
+                        MASS_MIN, MASS_MAX);
+    const dmg = base * ratio;
+    applyDamage(a, dmg, byBird);
+    applyDamage(b, dmg, byBird);
+    if (dmg > 0.6) {
+      spawnSparks((a.x + b.x) / 2, (a.y + b.y) / 2, byBird ? 8 : 4);
+      G.shake = Math.min(16, G.shake + dmg * 1.4);
+    }
+  }
+  if (byHeavy && impact > 420) G.shake = Math.min(18, G.shake + 1.2);
+}
+
+function applyDamage(b, dmg, byBird) {
+  if (b.dead || b.isStatic) return;
+  if (b.kind === 'bird') return;                      // 小鸟不受伤
+
+  if (b.kind === 'pig') {
+    // 被小鸟直接命中 → 立即消失；被高速飞来的障碍物砸中也会阵亡
+    if (byBird || dmg >= 0.3) destroyBody(b);
+    return;
+  }
+  if (b.kind === 'wood' || b.kind === 'stone') {
+    b.hp -= dmg;
+    if (b.hp <= 0) destroyBody(b);
+  }
+}
+
+function destroyBody(b) {
+  if (b.dead) return;
+  b.dead = true;
+
+  if (b.kind === 'pig') {
+    G.pigsLeft--;
+    G.kills.pig++;
+    addScore(SCORE.pig, b.x, b.y);
+    spawnParticles(b.x, b.y, '#7cc242', 18, 5.5);
+    spawnParticles(b.x, b.y, '#e8f5d0', 8, 3.5);
+  } else if (b.kind === 'wood') {
+    G.kills.wood++;
+    addScore(SCORE.wood, b.x, b.y - b.hh * 0.5);
+    spawnDebris(b, '#c98a4b', 12);
+  } else if (b.kind === 'stone') {
+    G.kills.stone++;
+    addScore(SCORE.stone, b.x, b.y - b.hh * 0.5);
+    spawnDebris(b, '#b8bcc4', 14);
+  } else if (b.kind === 'bird') {
+    spawnParticles(b.x, b.y, '#e8452c', 10, 4);
+  }
+}
+
+function addScore(v, x, y) {
+  if (G.state !== 'playing') return;
+  G.score += v;
+  G.floaters.push({ x, y, text: '+' + v, life: 1.0, vy: -46 });
+}
+
+/* =========================================================================
+   8. 特效
+   ========================================================================= */
+function spawnSparks(x, y, n) {
+  for (let i = 0; i < n; i++) {
+    const a = rand(0, TAU), sp = rand(60, 260);
+    G.particles.push({
+      type: 'spark', x, y,
+      vx: Math.cos(a) * sp, vy: Math.sin(a) * sp - 40,
+      r: rand(1.5, 3.2), life: rand(0.18, 0.4), maxLife: 0.4,
+      color: '#fff3c4', rot: 0, vr: 0
+    });
+  }
+}
+
+function spawnParticles(x, y, color, n, speed) {
+  for (let i = 0; i < n; i++) {
+    const a = rand(0, TAU), sp = rand(speed * 12, speed * 44);
+    G.particles.push({
+      type: 'blob', x, y,
+      vx: Math.cos(a) * sp, vy: Math.sin(a) * sp - 90,
+      r: rand(3, 7.5), life: rand(0.5, 0.95), maxLife: 0.95,
+      color, rot: rand(0, TAU), vr: rand(-8, 8)
+    });
+  }
+}
+
+function spawnDebris(b, color, n) {
+  for (let i = 0; i < n; i++) {
+    const w = rand(5, 15), h = rand(4, 11);
+    const a = rand(0, TAU), sp = rand(90, 400);
+    G.particles.push({
+      type: 'rect', x: b.x + rand(-b.hw, b.hw), y: b.y + rand(-b.hh, b.hh),
+      vx: Math.cos(a) * sp, vy: Math.sin(a) * sp - 160,
+      w, h, r: Math.max(w, h) * 0.5,
+      life: rand(0.6, 1.2), maxLife: 1.2,
+      color, rot: rand(0, TAU), vr: rand(-7, 7)
+    });
+  }
+}
+
+/* =========================================================================
+   9. 物理步进
+   ========================================================================= */
+function physicsStep(dt) {
+  const h = dt / SUBSTEPS;
+
+  for (let s = 0; s < SUBSTEPS; s++) {
+    // ---- 积分 ----
+    for (let i = 0; i < G.bodies.length; i++) {
+      const b = G.bodies[i];
+      b.contacts = 0;
+      if (b.isStatic || b.dead) continue;
+      b.vy += GRAVITY * h;
+      b.vx *= 0.9994;               // 极轻微空气阻力
+      b.vy *= 0.9994;
+      b.x += b.vx * h;
+      b.y += b.vy * h;
+      // 硬性地板保护：任何物体都不会掉出画布底部
+      if (b.y > GROUND_Y + 1200) { b.y = GROUND_Y + 1200; b.vy = 0; }
+    }
+
+    // ---- 碰撞检测与求解 ----
+    for (let i = 0; i < G.bodies.length; i++) {
+      const a = G.bodies[i];
+      if (a.dead) continue;
+      for (let k = i + 1; k < G.bodies.length; k++) {
+        // a 可能在本轮求解中被销毁（连锁破碎），需重新检查
+        if (a.dead) break;
+        const b = G.bodies[k];
+        if (b.dead) continue;
+        if (a.isStatic && b.isStatic) continue;
+        const m = collide(a, b);
+        if (m) resolve(a, b, m);
+      }
+    }
+
+    // ---- 静止抑制（消除堆叠抖动） ----
+    for (let i = 0; i < G.bodies.length; i++) {
+      const b = G.bodies[i];
+      if (b.isStatic || b.dead) continue;
+      if (b.contacts > 0) {
+        const sp = len(b.vx, b.vy);
+        if (sp < 13) { b.vx *= 0.55; b.vy *= 0.55; }
+        if (sp < 4.5) { b.vx = 0; b.vy = 0; }
+      }
+    }
+
+    // ---- 出界回收 ----
+    for (let i = G.bodies.length - 1; i >= 0; i--) {
+      const b = G.bodies[i];
+      if (b.isStatic) continue;
+      if (b.dead || b.x < -600 || b.x > W + 600 || b.y > H + 900) {
+        G.bodies.splice(i, 1);
+      }
+    }
+  }
+}
+
+/* =========================================================================
+   10. 发射流程
+   ========================================================================= */
+function loadBird() {
+  if (G.birdsUsed >= G.birdsTotal) { G.currentBird = null; return; }
+  const b = circleBody(SLING.x, SLING.y, BIRD_R, 4.0, 'bird', {
+    restitution: 0.34, friction: 0.5
+  });
+  b.launched = false;
+  b.angle = 0;
+  G.currentBird = b;
+}
+
+function setBirdFromPointer(px, py) {
+  const b = G.currentBird;
+  if (!b) return;
+  let dx = px - SLING.x, dy = py - SLING.y;
+  const d = len(dx, dy);
+  if (d > MAX_STRETCH) { dx = dx / d * MAX_STRETCH; dy = dy / d * MAX_STRETCH; }
+  b.x = SLING.x + dx;
+  b.y = SLING.y + dy;
+}
+
+function launchBird(vx, vy) {
+  const b = G.currentBird;
+  if (!b) return;
+  G.birdsUsed++;
+  b.launched = true;
+  b.vx = vx; b.vy = vy;
+  b.angle = Math.atan2(vy, vx);
+  G.bodies.push(b);
+  G.flyingBird = b;
+  G.currentBird = null;
+  G.dragging = false;
+  G.restTimer = 0;
+  G.flightTime = 0;
+  G.trail = [];
+  // 发射瞬间的尘土
+  spawnSparks(b.x, b.y, 10);
+  G.shake = Math.min(G.shake + 3, 10);
+}
+
+function endShot() {
+  if (G.flyingBird) {
+    spawnParticles(G.flyingBird.x, G.flyingBird.y, '#e8452c', 8, 3);
+    G.flyingBird.dead = true;
+    G.flyingBird = null;
+  }
+  G.trail = [];
+  G.restTimer = 0;
+  if (G.pigsLeft > 0 && G.birdsUsed < G.birdsTotal) loadBird();
+}
+
+/* =========================================================================
+   11. 主更新
+   ========================================================================= */
+function update(dt) {
+  G.time += dt;
+  G.shake *= Math.pow(0.02, dt);          // 衰减震动
+  if (G.shake < 0.3) G.shake = 0;
+
+  // 粒子
+  for (let i = G.particles.length - 1; i >= 0; i--) {
+    const p = G.particles[i];
+    p.life -= dt;
+    if (p.life <= 0) { G.particles.splice(i, 1); continue; }
+    p.vy += 1100 * dt;
+    p.vx *= 0.995;
+    p.x += p.vx * dt;
+    p.y += p.vy * dt;
+    p.rot += p.vr * dt;
+    // 落地
+    if (p.y > GROUND_Y - 2 && p.vy > 0) {
+      p.y = GROUND_Y - 2;
+      p.vy *= -0.32;
+      p.vx *= 0.7;
+    }
+  }
+
+  // 飘分文字
+  for (let i = G.floaters.length - 1; i >= 0; i--) {
+    const f = G.floaters[i];
+    f.life -= dt * 1.15;
+    f.y += f.vy * dt;
+    f.vy *= 0.94;
+    if (f.life <= 0) G.floaters.splice(i, 1);
+  }
+
+  if (G.state !== 'playing') {
+    physicsStep(dt);
+    return;
+  }
+
+  physicsStep(dt);
+
+  // 小鸟朝向跟随速度方向
+  for (const b of G.bodies) {
+    if (b.kind === 'bird' && !b.dead) {
+      const sp = len(b.vx, b.vy);
+      if (sp > 70) b.angle = Math.atan2(b.vy, b.vx);
+    }
+  }
+
+  // 飞行残影轨迹
+  if (G.flyingBird && !G.flyingBird.dead) {
+    G.trail.push({ x: G.flyingBird.x, y: G.flyingBird.y });
+    if (G.trail.length > 26) G.trail.shift();
+  }
+
+  // ---- 判断本次发射是否结束 ----
+  if (G.flyingBird) {
+    G.flightTime += dt;
+    const b = G.flyingBird;
+    if (b.dead) {
+      endShot();
+    } else {
+      const sp = len(b.vx, b.vy);
+      if (sp < 28) G.restTimer += dt; else G.restTimer = 0;
+      if (G.restTimer > 0.7 || G.flightTime > 9 ||
+          b.x > W + 70 || b.x < -70 || b.y > H + 200) {
+        endShot();
+      }
+    }
+  }
+
+  // ---- 胜负判定 ----
+  if (G.pigsLeft <= 0) {
+    G.endTimer += dt;
+    if (G.endTimer > 1.1) endGame(true);
+  } else if (!G.flyingBird && !G.currentBird && G.birdsUsed >= G.birdsTotal) {
+    G.endTimer += dt;
+    if (G.endTimer > 0.9) endGame(false);
+  } else {
+    G.endTimer = 0;
+  }
+}
+
+/* =========================================================================
+   12. 绘制：背景
+   ========================================================================= */
+const clouds = [];
+for (let i = 0; i < 6; i++) {
+  clouds.push({ x: rand(0, W), y: rand(50, 260), s: rand(0.6, 1.5), sp: rand(4, 14) });
+}
+
+function drawBackground() {
+  // 天空
+  const sky = ctx.createLinearGradient(0, 0, 0, GROUND_Y);
+  sky.addColorStop(0, '#5fb8e8');
+  sky.addColorStop(0.55, '#9fd8f5');
+  sky.addColorStop(1, '#dff2ff');
+  ctx.fillStyle = sky;
+  ctx.fillRect(0, 0, W, GROUND_Y + 2);
+
+  // 太阳
+  ctx.save();
+  const sun = ctx.createRadialGradient(1080, 110, 10, 1080, 110, 130);
+  sun.addColorStop(0, 'rgba(255,246,190,.95)');
+  sun.addColorStop(0.35, 'rgba(255,236,140,.5)');
+  sun.addColorStop(1, 'rgba(255,236,140,0)');
+  ctx.fillStyle = sun;
+  ctx.beginPath(); ctx.arc(1080, 110, 130, 0, TAU); ctx.fill();
+  ctx.restore();
+
+  // 云
+  ctx.save();
+  for (const c of clouds) {
+    c.x += c.sp * 0.016;
+    if (c.x > W + 200) c.x = -200;
+    drawCloud(c.x, c.y, c.s);
+  }
+  ctx.restore();
+
+  // 远景山丘
+  ctx.fillStyle = '#8fd06a';
+  ctx.beginPath();
+  ctx.moveTo(-100, GROUND_Y);
+  ctx.quadraticCurveTo(120, 380, 380, GROUND_Y);
+  ctx.closePath(); ctx.fill();
+  ctx.fillStyle = '#7cc247';
+  ctx.beginPath();
+  ctx.moveTo(520, GROUND_Y);
+  ctx.quadraticCurveTo(760, 420, 1010, GROUND_Y);
+  ctx.closePath(); ctx.fill();
+  ctx.fillStyle = '#8fd06a';
+  ctx.beginPath();
+  ctx.moveTo(940, GROUND_Y);
+  ctx.quadraticCurveTo(1160, 400, 1400, GROUND_Y);
+  ctx.closePath(); ctx.fill();
+
+  // 地面
+  const soil = ctx.createLinearGradient(0, GROUND_Y, 0, H);
+  soil.addColorStop(0, '#a9713c');
+  soil.addColorStop(0.25, '#8b5a2b');
+  soil.addColorStop(1, '#5c3a1a');
+  ctx.fillStyle = soil;
+  ctx.fillRect(0, GROUND_Y, W, H - GROUND_Y);
+
+  // 草皮
+  ctx.fillStyle = '#6cbf3f';
+  ctx.fillRect(0, GROUND_Y, W, 18);
+  ctx.fillStyle = '#8ad954';
+  ctx.fillRect(0, GROUND_Y, W, 7);
+  ctx.fillStyle = 'rgba(60,120,30,.35)';
+  ctx.fillRect(0, GROUND_Y + 16, W, 4);
+
+  // 泥土纹理小石子
+  ctx.save();
+  ctx.fillStyle = 'rgba(0,0,0,.10)';
+  for (let i = 0; i < 46; i++) {
+    const x = ((i * 197) % W) + (i % 3) * 13;
+    const y = GROUND_Y + 30 + ((i * 61) % 60);
+    ctx.beginPath(); ctx.arc(x, y, 2 + (i % 3), 0, TAU); ctx.fill();
+  }
+  ctx.restore();
+}
+
+function drawCloud(x, y, s) {
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.scale(s, s);
+  ctx.fillStyle = 'rgba(255,255,255,.92)';
+  ctx.beginPath();
+  ctx.arc(0, 0, 30, 0, TAU);
+  ctx.arc(34, 8, 24, 0, TAU);
+  ctx.arc(-34, 8, 22, 0, TAU);
+  ctx.arc(10, -16, 22, 0, TAU);
+  ctx.fill();
+  ctx.fillStyle = 'rgba(200,230,250,.75)';
+  ctx.beginPath();
+  ctx.ellipse(0, 16, 58, 12, 0, 0, TAU);
+  ctx.fill();
+  ctx.restore();
+}
+
+/* =========================================================================
+   13. 绘制：弹弓
+   ========================================================================= */
+const LEFT_TIP  = { x: SLING.x - 20, y: SLING.y - 36 };
+const RIGHT_TIP = { x: SLING.x + 20, y: SLING.y - 30 };
+
+function drawSlingWoodBack() {
+  const bx = SLING.x, by = GROUND_Y + 8;
+  ctx.save();
+  ctx.lineCap = 'round';
+
+  // 阴影
+  ctx.strokeStyle = 'rgba(0,0,0,.18)';
+  ctx.lineWidth = 26;
+  ctx.beginPath(); ctx.moveTo(bx + 6, by); ctx.lineTo(bx + 6, SLING.y + 26); ctx.stroke();
+
+  // 主干
+  ctx.strokeStyle = '#7a4a22';
+  ctx.lineWidth = 24;
+  ctx.beginPath(); ctx.moveTo(bx, by); ctx.lineTo(bx, SLING.y + 34); ctx.stroke();
+  ctx.strokeStyle = '#a3672f';
+  ctx.lineWidth = 15;
+  ctx.beginPath(); ctx.moveTo(bx - 2, by); ctx.lineTo(bx - 2, SLING.y + 34); ctx.stroke();
+
+  // 左叉
+  ctx.strokeStyle = '#7a4a22';
+  ctx.lineWidth = 20;
+  ctx.beginPath(); ctx.moveTo(bx - 1, SLING.y + 40); ctx.lineTo(LEFT_TIP.x, LEFT_TIP.y); ctx.stroke();
+  ctx.strokeStyle = '#a3672f';
+  ctx.lineWidth = 12;
+  ctx.beginPath(); ctx.moveTo(bx - 2, SLING.y + 40); ctx.lineTo(LEFT_TIP.x, LEFT_TIP.y); ctx.stroke();
+
+  ctx.restore();
+}
+
+function drawSlingWoodFront() {
+  const bx = SLING.x;
+  ctx.save();
+  ctx.lineCap = 'round';
+  // 右叉（绘制在小鸟之上，形成"夹住"的层次感）
+  ctx.strokeStyle = '#7a4a22';
+  ctx.lineWidth = 20;
+  ctx.beginPath(); ctx.moveTo(bx + 1, SLING.y + 40); ctx.lineTo(RIGHT_TIP.x, RIGHT_TIP.y); ctx.stroke();
+  ctx.strokeStyle = '#b8763a';
+  ctx.lineWidth = 12;
+  ctx.beginPath(); ctx.moveTo(bx + 2, SLING.y + 40); ctx.lineTo(RIGHT_TIP.x, RIGHT_TIP.y); ctx.stroke();
+  ctx.restore();
+}
+
+/** 皮筋起点：优先跟随小鸟当前位置 */
+function bandTarget() {
+  if (G.currentBird) return { x: G.currentBird.x, y: G.currentBird.y };
+  return { x: SLING.x, y: SLING.y };
+}
+
+function drawBandBack() {
+  const t = bandTarget();
+  ctx.save();
+  ctx.lineCap = 'round';
+  ctx.strokeStyle = '#4a2a15';
+  ctx.lineWidth = 11;
+  ctx.beginPath(); ctx.moveTo(LEFT_TIP.x, LEFT_TIP.y); ctx.lineTo(t.x, t.y); ctx.stroke();
+  ctx.strokeStyle = '#6b4226';
+  ctx.lineWidth = 7;
+  ctx.beginPath(); ctx.moveTo(LEFT_TIP.x, LEFT_TIP.y); ctx.lineTo(t.x, t.y); ctx.stroke();
+  ctx.restore();
+}
+
+function drawBandFront() {
+  const t = bandTarget();
+  ctx.save();
+  ctx.lineCap = 'round';
+  ctx.strokeStyle = '#4a2a15';
+  ctx.lineWidth = 11;
+  ctx.beginPath(); ctx.moveTo(RIGHT_TIP.x, RIGHT_TIP.y); ctx.lineTo(t.x, t.y); ctx.stroke();
+  ctx.strokeStyle = '#7d4d2b';
+  ctx.lineWidth = 7;
+  ctx.beginPath(); ctx.moveTo(RIGHT_TIP.x, RIGHT_TIP.y); ctx.lineTo(t.x, t.y); ctx.stroke();
+
+  // 皮兜
+  const a = Math.atan2(RIGHT_TIP.y - LEFT_TIP.y, RIGHT_TIP.x - LEFT_TIP.x);
+  ctx.translate(t.x, t.y);
+  ctx.rotate(a);
+  ctx.fillStyle = '#5c3418';
+  roundRect(ctx, -6, -16, 12, 32, 5);
+  ctx.fill();
+  ctx.restore();
+}
+
+/* =========================================================================
+   14. 绘制：角色与障碍
+   ========================================================================= */
+function drawBody(b) {
+  if (b.dead || b.hidden) return;
+  if (b.kind === 'bird') drawBirdBody(b);
+  else if (b.kind === 'pig') drawPigBody(b);
+  else if (b.kind === 'wood') drawBlockBody(b, 'wood');
+  else if (b.kind === 'stone') drawBlockBody(b, 'stone');
+}
+
+/* ----- 小鸟 ----- */
+function drawBirdBody(b) {
+  ctx.save();
+  ctx.translate(b.x, b.y);
+  ctx.rotate(b.angle || 0);
+
+  const r = b.r;
+
+  // 地面投影
+  ctx.save();
+  ctx.rotate(-(b.angle || 0));
+  const birdShadow = GROUND_Y - b.y + 4;
+  const birdFade = clamp(1 - (birdShadow - 260) / 260, 0, 1);
+  if (birdFade > 0.02) {
+    ctx.fillStyle = 'rgba(0,0,0,' + (0.16 * birdFade) + ')';
+    ctx.beginPath();
+    ctx.ellipse(0, birdShadow, r * 1.1 * birdFade, r * 0.35 * birdFade, 0, 0, TAU);
+    ctx.fill();
+  }
+  ctx.restore();
+
+  // 尾羽
+  ctx.fillStyle = '#a8221a';
+  ctx.beginPath();
+  ctx.moveTo(-r * 0.7, -r * 0.35);
+  ctx.lineTo(-r * 1.75, -r * 0.85);
+  ctx.lineTo(-r * 1.6, -r * 0.1);
+  ctx.lineTo(-r * 1.9, r * 0.25);
+  ctx.lineTo(-r * 1.5, r * 0.42);
+  ctx.lineTo(-r * 0.7, r * 0.4);
+  ctx.closePath();
+  ctx.fill();
+
+  // 身体
+  const g = ctx.createRadialGradient(-r * 0.3, -r * 0.4, r * 0.15, 0, 0, r * 1.15);
+  g.addColorStop(0, '#ff6b52');
+  g.addColorStop(0.55, '#e8452c');
+  g.addColorStop(1, '#b02216');
+  ctx.fillStyle = g;
+  ctx.beginPath(); ctx.arc(0, 0, r, 0, TAU); ctx.fill();
+
+  // 肚皮
+  ctx.fillStyle = '#f7d9b8';
+  ctx.beginPath();
+  ctx.ellipse(r * 0.16, r * 0.42, r * 0.52, r * 0.38, 0, 0, TAU);
+  ctx.fill();
+
+  // 头顶羽毛
+  ctx.fillStyle = '#b02216';
+  ctx.beginPath();
+  ctx.moveTo(-r * 0.18, -r * 0.96);
+  ctx.lineTo(-r * 0.34, -r * 1.42);
+  ctx.lineTo(-r * 0.02, -r * 1.05);
+  ctx.closePath(); ctx.fill();
+  ctx.beginPath();
+  ctx.moveTo(r * 0.16, -r * 0.98);
+  ctx.lineTo(r * 0.2, -r * 1.45);
+  ctx.lineTo(r * 0.44, -r * 0.9);
+  ctx.closePath(); ctx.fill();
+
+  // 眼睛（白）
+  ctx.fillStyle = '#fff';
+  ctx.beginPath(); ctx.arc(r * 0.12, -r * 0.42, r * 0.33, 0, TAU); ctx.fill();
+  ctx.beginPath(); ctx.arc(r * 0.62, -r * 0.42, r * 0.31, 0, TAU); ctx.fill();
+  // 瞳孔
+  ctx.fillStyle = '#161616';
+  ctx.beginPath(); ctx.arc(r * 0.22, -r * 0.42, r * 0.145, 0, TAU); ctx.fill();
+  ctx.beginPath(); ctx.arc(r * 0.72, -r * 0.42, r * 0.145, 0, TAU); ctx.fill();
+  ctx.fillStyle = 'rgba(255,255,255,.9)';
+  ctx.beginPath(); ctx.arc(r * 0.16, -r * 0.5, r * 0.06, 0, TAU); ctx.fill();
+  ctx.beginPath(); ctx.arc(r * 0.66, -r * 0.5, r * 0.06, 0, TAU); ctx.fill();
+
+  // 怒眉
+  ctx.strokeStyle = '#1b1b1b';
+  ctx.lineWidth = r * 0.17;
+  ctx.lineCap = 'round';
+  ctx.beginPath();
+  ctx.moveTo(-r * 0.2, -r * 0.86); ctx.lineTo(r * 0.34, -r * 0.62);
+  ctx.moveTo(r * 0.95, -r * 0.78); ctx.lineTo(r * 0.5, -r * 0.66);
+  ctx.stroke();
+
+  // 喙
+  ctx.fillStyle = '#f7a41d';
+  ctx.beginPath();
+  ctx.moveTo(r * 0.72, r * 0.02);
+  ctx.lineTo(r * 1.42, r * 0.2);
+  ctx.lineTo(r * 0.72, r * 0.46);
+  ctx.closePath();
+  ctx.fill();
+  ctx.strokeStyle = '#c97c0c';
+  ctx.lineWidth = r * 0.08;
+  ctx.beginPath();
+  ctx.moveTo(r * 0.74, r * 0.24); ctx.lineTo(r * 1.36, r * 0.2);
+  ctx.stroke();
+
+  ctx.restore();
+}
+
+/* ----- 小猪 ----- */
+function drawPigBody(b) {
+  const r = b.r;
+  ctx.save();
+  ctx.translate(b.x, b.y);
+
+  // 影子
+  ctx.fillStyle = 'rgba(0,0,0,.14)';
+  ctx.beginPath();
+  ctx.ellipse(0, GROUND_Y - b.y + 4, r * 1.05, r * 0.34, 0, 0, TAU);
+  ctx.fill();
+
+  // 耳朵
+  ctx.fillStyle = '#5da62f';
+  ctx.beginPath();
+  ctx.ellipse(-r * 0.62, -r * 0.82, r * 0.24, r * 0.2, -0.5, 0, TAU); ctx.fill();
+  ctx.beginPath();
+  ctx.ellipse(r * 0.62, -r * 0.82, r * 0.24, r * 0.2, 0.5, 0, TAU); ctx.fill();
+
+  // 身体
+  const g = ctx.createRadialGradient(-r * 0.3, -r * 0.35, r * 0.15, 0, 0, r * 1.15);
+  g.addColorStop(0, '#a4e469');
+  g.addColorStop(0.5, '#7cc242');
+  g.addColorStop(1, '#4e9127');
+  ctx.fillStyle = g;
+  ctx.beginPath(); ctx.arc(0, 0, r, 0, TAU); ctx.fill();
+
+  // 猪鼻
+  ctx.fillStyle = '#69ad35';
+  ctx.beginPath();
+  ctx.ellipse(0, r * 0.28, r * 0.42, r * 0.32, 0, 0, TAU); ctx.fill();
+  ctx.fillStyle = '#3f7521';
+  ctx.beginPath(); ctx.ellipse(-r * 0.15, r * 0.28, r * 0.075, r * 0.115, 0, 0, TAU); ctx.fill();
+  ctx.beginPath(); ctx.ellipse(r * 0.15, r * 0.28, r * 0.075, r * 0.115, 0, 0, TAU); ctx.fill();
+
+  // 眼睛
+  ctx.fillStyle = '#fff';
+  ctx.beginPath(); ctx.arc(-r * 0.34, -r * 0.3, r * 0.27, 0, TAU); ctx.fill();
+  ctx.beginPath(); ctx.arc(r * 0.34, -r * 0.3, r * 0.27, 0, TAU); ctx.fill();
+  ctx.fillStyle = '#161616';
+  ctx.beginPath(); ctx.arc(-r * 0.31, -r * 0.29, r * 0.115, 0, TAU); ctx.fill();
+  ctx.beginPath(); ctx.arc(r * 0.37, -r * 0.29, r * 0.115, 0, TAU); ctx.fill();
+  ctx.fillStyle = 'rgba(255,255,255,.95)';
+  ctx.beginPath(); ctx.arc(-r * 0.36, -r * 0.36, r * 0.05, 0, TAU); ctx.fill();
+  ctx.beginPath(); ctx.arc(r * 0.32, -r * 0.36, r * 0.05, 0, TAU); ctx.fill();
+
+  // 受伤表情（血量低于阈值时皱眉）
+  if (b.hp < b.maxHp * 0.85) {
+    ctx.strokeStyle = '#2d5415';
+    ctx.lineWidth = r * 0.11;
+    ctx.beginPath();
+    ctx.moveTo(-r * 0.62, -r * 0.68); ctx.lineTo(-r * 0.13, -r * 0.56);
+    ctx.moveTo(r * 0.62, -r * 0.68); ctx.lineTo(r * 0.13, -r * 0.56);
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+
+/* ----- 木块 / 石块 ----- */
+function drawBlockBody(b, mat) {
+  const x = b.x - b.hw, y = b.y - b.hh, w = b.w, h = b.h;
+  const dmg = 1 - b.hp / b.maxHp;
+
+  ctx.save();
+
+  // 地面投影：随离地高度淡出，避免多个方块影子在高空叠成一团
+  const shadowY = GROUND_Y - b.y;
+  if (shadowY > 0) {
+    const fade = clamp(1 - (shadowY - 220) / 260, 0, 1);
+    if (fade > 0.02) {
+      ctx.fillStyle = 'rgba(0,0,0,' + (0.16 * fade) + ')';
+      ctx.beginPath();
+      ctx.ellipse(0, shadowY - 2, b.hw * (0.85 + 0.2 * fade), 6, 0, 0, TAU);
+      ctx.fill();
+    }
+  }
+
+  // 底色
+  const base = mat === 'wood' ? '#c98a4b' : '#b8bcc4';
+  const dark = mat === 'wood' ? '#a2682f' : '#8d939d';
+  const line = mat === 'wood' ? '#8a5a2b' : '#727883';
+
+  const g = ctx.createLinearGradient(x, y, x, y + h);
+  g.addColorStop(0, mat === 'wood' ? '#e0aa72' : '#d3d7de');
+  g.addColorStop(0.45, base);
+  g.addColorStop(1, dark);
+  ctx.fillStyle = g;
+  roundRect(ctx, x, y, w, h, 4);
+  ctx.fill();
+
+  // 边框
+  ctx.strokeStyle = line;
+  ctx.lineWidth = 2;
+  roundRect(ctx, x + 1, y + 1, w - 2, h - 2, 4);
+  ctx.stroke();
+
+  // 内部纹理
+  ctx.save();
+  roundRect(ctx, x + 2, y + 2, w - 4, h - 4, 3);
+  ctx.clip();
+  if (mat === 'wood') {
+    ctx.strokeStyle = 'rgba(120,74,30,.42)';
+    ctx.lineWidth = 1.4;
+    if (w >= h) {
+      for (let i = 1; i <= 3; i++) {
+        const yy = y + (h * i / 4) + (i % 2 ? 1.5 : -1.5);
+        ctx.beginPath(); ctx.moveTo(x + 4, yy); ctx.lineTo(x + w - 4, yy); ctx.stroke();
+      }
+    } else {
+      for (let i = 1; i <= 4; i++) {
+        const xx = x + (w * i / 5) + (i % 2 ? 1.5 : -1.5);
+        ctx.beginPath(); ctx.moveTo(xx, y + 4); ctx.lineTo(xx, y + h - 4); ctx.stroke();
+      }
+    }
+    // 木节
+    ctx.fillStyle = 'rgba(122,74,30,.55)';
+    ctx.beginPath();
+    ctx.ellipse(x + w * (0.3 + b.seed * 0.4), y + h * (0.25 + b.seed * 0.5),
+                2.6, 4.2, 0, 0, TAU);
+    ctx.fill();
+  } else {
+    ctx.fillStyle = 'rgba(255,255,255,.30)';
+    for (let i = 0; i < 10; i++) {
+      const rx = x + ((i * 71 + b.seed * 300) % w);
+      const ry = y + ((i * 133 + b.seed * 200) % h);
+      ctx.beginPath(); ctx.arc(rx, ry, 1.2 + (i % 3) * 0.7, 0, TAU); ctx.fill();
+    }
+    ctx.fillStyle = 'rgba(90,96,106,.28)';
+    for (let i = 0; i < 7; i++) {
+      const rx = x + ((i * 97 + b.seed * 170) % w);
+      const ry = y + ((i * 53 + b.seed * 260) % h);
+      ctx.beginPath(); ctx.arc(rx, ry, 1.6 + (i % 2) * 0.9, 0, TAU); ctx.fill();
+    }
+  }
+
+  // 裂纹（随伤害加深）
+  if (dmg > 0.22) {
+    ctx.strokeStyle = 'rgba(45,28,12,.62)';
+    ctx.lineWidth = 1.8;
+    const cx = x + w * 0.5, cy = y + h * 0.5;
+    const n = dmg > 0.6 ? 4 : 2;
+    for (let i = 0; i < n; i++) {
+      const ang = (i / n) * TAU + b.seed * 3;
+      const l1 = Math.min(w, h) * 0.3;
+      ctx.beginPath();
+      ctx.moveTo(cx, cy);
+      ctx.lineTo(cx + Math.cos(ang) * l1, cy + Math.sin(ang) * l1);
+      ctx.lineTo(cx + Math.cos(ang + 0.5) * l1 * 1.7,
+                 cy + Math.sin(ang + 0.5) * l1 * 1.7);
+      ctx.stroke();
+    }
+  }
+  ctx.restore();
+  ctx.restore();
+}
+
+/* =========================================================================
+   15. 绘制：瞄准辅助
+   ========================================================================= */
+function drawAim() {
+  const b = G.currentBird;
+  if (!b) return;
+  const dx = SLING.x - b.x, dy = SLING.y - b.y;
+  const stretch = len(dx, dy);
+  if (stretch < 6) return;
+
+  const vx0 = dx * LAUNCH_POWER, vy0 = dy * LAUNCH_POWER;
+  const power = clamp(stretch / MAX_STRETCH, 0, 1);
+
+  ctx.save();
+
+  // ① 反向延长虚线（瞄准线）
+  ctx.setLineDash([9, 9]);
+  ctx.lineWidth = 2.5;
+  ctx.strokeStyle = 'rgba(255,255,255,.55)';
+  const ux = -dx / stretch, uy = -dy / stretch;
+  ctx.beginPath();
+  ctx.moveTo(b.x, b.y);
+  ctx.lineTo(b.x + ux * 600, b.y + uy * 600);
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  // ② 抛物线预测点
+  const h = 1 / 60;
+  let px = b.x, py = b.y, pvx = vx0, pvy = vy0;
+  for (let i = 0; i < 110; i++) {
+    pvy += GRAVITY * h;
+    pvx *= 0.9994; pvy *= 0.9994;
+    px += pvx * h; py += pvy * h;
+    if (py > GROUND_Y - 6 || px > W + 40) break;
+    if (i % 3 === 0) {
+      const a = 0.72 * (1 - i / 110);
+      // 根据力度渐变：绿 → 黄 → 红
+      const hue = 110 - 110 * power;
+      ctx.fillStyle = 'hsla(' + hue + ',95%,60%,' + a + ')';
+      ctx.beginPath();
+      ctx.arc(px, py, 3.4 - i * 0.008, 0, TAU);
+      ctx.fill();
+    }
+  }
+
+  // ③ 环绕小鸟的力度环
+  ctx.beginPath();
+  ctx.arc(b.x, b.y, b.r + 11, 0, TAU);
+  ctx.strokeStyle = 'rgba(0,0,0,.22)';
+  ctx.lineWidth = 5;
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.arc(b.x, b.y, b.r + 11, -Math.PI / 2, -Math.PI / 2 + TAU * power);
+  ctx.strokeStyle = 'hsl(' + (110 - 110 * power) + ',95%,55%)';
+  ctx.lineWidth = 5;
+  ctx.lineCap = 'round';
+  ctx.stroke();
+
+  // ④ 角度 / 力度数字
+  const angDeg = Math.round(-Math.atan2(dy, dx) * 180 / Math.PI);
+  ctx.font = 'bold 17px system-ui, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.lineWidth = 4;
+  ctx.strokeStyle = 'rgba(0,0,0,.5)';
+  ctx.fillStyle = '#fff';
+  const label = angDeg + '°  ' + Math.round(power * 100) + '%';
+  const ly = b.y - b.r - 26;
+  ctx.strokeText(label, b.x, ly);
+  ctx.fillText(label, b.x, ly);
+
+  ctx.restore();
+}
+
+/* =========================================================================
+   16. 绘制：HUD / 特效
+   ========================================================================= */
+function drawTrail() {
+  if (G.trail.length < 2) return;
+  ctx.save();
+  for (let i = 0; i < G.trail.length; i++) {
+    const p = G.trail[i];
+    const t = i / G.trail.length;
+    ctx.globalAlpha = 0.05 + t * 0.28;
+    ctx.fillStyle = '#fff';
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, 2 + t * 3.5, 0, TAU);
+    ctx.fill();
+  }
+  ctx.restore();
+}
+
+function drawParticles() {
+  ctx.save();
+  for (const p of G.particles) {
+    const a = clamp(p.life / p.maxLife, 0, 1);
+    ctx.globalAlpha = a;
+    ctx.fillStyle = p.color;
+    if (p.type === 'rect') {
+      ctx.save();
+      ctx.translate(p.x, p.y);
+      ctx.rotate(p.rot);
+      ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
+      ctx.restore();
+    } else {
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.r * (0.4 + a * 0.6), 0, TAU);
+      ctx.fill();
+    }
+  }
+  ctx.restore();
+}
+
+function drawFloaters() {
+  ctx.save();
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.font = 'bold 26px system-ui, sans-serif';
+  for (const f of G.floaters) {
+    const a = clamp(f.life, 0, 1);
+    ctx.globalAlpha = a;
+    ctx.lineWidth = 5;
+    ctx.strokeStyle = 'rgba(30,15,0,.65)';
+    ctx.strokeText(f.text, f.x, f.y);
+    ctx.fillStyle = '#ffe066';
+    ctx.fillText(f.text, f.x, f.y);
+  }
+  ctx.restore();
+}
+
+function drawBirdIcon(x, y, r) {
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.fillStyle = '#e8452c';
+  ctx.beginPath(); ctx.arc(0, 0, r, 0, TAU); ctx.fill();
+  ctx.strokeStyle = '#a8221a';
+  ctx.lineWidth = 1.6; ctx.stroke();
+  ctx.fillStyle = '#f7d9b8';
+  ctx.beginPath(); ctx.ellipse(r * 0.15, r * 0.42, r * 0.5, r * 0.34, 0, 0, TAU); ctx.fill();
+  ctx.fillStyle = '#fff';
+  ctx.beginPath(); ctx.arc(-r * 0.22, -r * 0.3, r * 0.30, 0, TAU); ctx.fill();
+  ctx.beginPath(); ctx.arc(r * 0.34, -r * 0.3, r * 0.28, 0, TAU); ctx.fill();
+  ctx.fillStyle = '#161616';
+  ctx.beginPath(); ctx.arc(-r * 0.16, -r * 0.3, r * 0.13, 0, TAU); ctx.fill();
+  ctx.beginPath(); ctx.arc(r * 0.40, -r * 0.3, r * 0.13, 0, TAU); ctx.fill();
+  ctx.fillStyle = '#f7a41d';
+  ctx.beginPath();
+  ctx.moveTo(r * 0.45, r * 0.05); ctx.lineTo(r * 1.15, r * 0.22); ctx.lineTo(r * 0.45, r * 0.42);
+  ctx.closePath(); ctx.fill();
+  ctx.restore();
+}
+
+function drawPigIcon(x, y, r) {
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.fillStyle = '#7cc242';
+  ctx.beginPath(); ctx.arc(0, 0, r, 0, TAU); ctx.fill();
+  ctx.strokeStyle = '#4e9127';
+  ctx.lineWidth = 1.6; ctx.stroke();
+  ctx.fillStyle = '#69ad35';
+  ctx.beginPath(); ctx.ellipse(0, r * 0.3, r * 0.42, r * 0.3, 0, 0, TAU); ctx.fill();
+  ctx.fillStyle = '#3f7521';
+  ctx.beginPath(); ctx.arc(-r * 0.15, r * 0.3, r * 0.08, 0, TAU); ctx.fill();
+  ctx.beginPath(); ctx.arc(r * 0.15, r * 0.3, r * 0.08, 0, TAU); ctx.fill();
+  ctx.fillStyle = '#fff';
+  ctx.beginPath(); ctx.arc(-r * 0.34, -r * 0.28, r * 0.27, 0, TAU); ctx.fill();
+  ctx.beginPath(); ctx.arc(r * 0.34, -r * 0.28, r * 0.27, 0, TAU); ctx.fill();
+  ctx.fillStyle = '#161616';
+  ctx.beginPath(); ctx.arc(-r * 0.31, -r * 0.28, r * 0.12, 0, TAU); ctx.fill();
+  ctx.beginPath(); ctx.arc(r * 0.37, -r * 0.28, r * 0.12, 0, TAU); ctx.fill();
+  ctx.restore();
+}
+
+function drawHUD() {
+  const birdsLeft = Math.max(0, G.birdsTotal - G.birdsUsed);
+
+  // 剩余小鸟
+  ctx.save();
+  for (let i = 0; i < birdsLeft; i++) {
+    drawBirdIcon(46 + i * 40, 50, 15);
+  }
+  ctx.restore();
+
+  // 剩余小猪
+  ctx.save();
+  drawPigIcon(56, 100, 13);
+  ctx.font = 'bold 24px system-ui, sans-serif';
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'middle';
+  ctx.lineWidth = 5;
+  ctx.strokeStyle = 'rgba(30,50,10,.6)';
+  ctx.strokeText('× ' + G.pigsLeft, 78, 101);
+  ctx.fillStyle = '#fff';
+  ctx.fillText('× ' + G.pigsLeft, 78, 101);
+  ctx.restore();
+
+  // 得分
+  ctx.save();
+  ctx.textAlign = 'right';
+  ctx.textBaseline = 'middle';
+  ctx.font = 'bold 18px system-ui, sans-serif';
+  ctx.lineWidth = 5;
+  ctx.strokeStyle = 'rgba(30,20,0,.5)';
+  ctx.strokeText('得分', W - 34, 26);
+  ctx.fillStyle = 'rgba(255,255,255,.85)';
+  ctx.fillText('得分', W - 34, 26);
+
+  ctx.font = 'bold 38px system-ui, sans-serif';
+  ctx.lineWidth = 7;
+  ctx.strokeStyle = 'rgba(30,20,0,.6)';
+  ctx.strokeText(G.score, W - 34, 58);
+  ctx.fillStyle = '#ffe066';
+  ctx.fillText(G.score, W - 34, 58);
+  ctx.restore();
+
+  // 操作提示
+  if (G.currentBird && !G.dragging && G.time % 3 < 2.2) {
+    ctx.save();
+    ctx.globalAlpha = 0.85;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.font = 'bold 22px system-ui, sans-serif';
+    ctx.lineWidth = 5;
+    ctx.strokeStyle = 'rgba(0,0,0,.45)';
+    ctx.strokeText('拖动小鸟瞄准，松手发射', SLING.x + 40, SLING.y + 130);
+    ctx.fillStyle = '#fff';
+    ctx.fillText('拖动小鸟瞄准，松手发射', SLING.x + 40, SLING.y + 130);
+    ctx.restore();
+  }
+}
+
+/* =========================================================================
+   17. 渲染主函数
+   ========================================================================= */
+function render() {
+  ctx.clearRect(0, 0, W, H);
+
+  ctx.save();
+  if (G.shake > 0.4) {
+    ctx.translate(rand(-G.shake, G.shake), rand(-G.shake, G.shake));
+  }
+
+  drawBackground();
+  drawSlingWoodBack();
+  drawBandBack();
+  drawTrail();
+
+  // 场景刚体
+  for (const b of G.bodies) drawBody(b);
+
+  // 弹弓上的小鸟
+  if (G.currentBird && !G.currentBird.launched) drawBirdBody(G.currentBird);
+
+  drawParticles();
+
+  drawSlingWoodFront();
+  drawBandFront();
+
+  if (G.dragging) drawAim();
+
+  drawFloaters();
+  ctx.restore();
+
+  drawHUD();
+}
+
+/* =========================================================================
+   18. 输入处理（鼠标 + 触摸统一走 Pointer Events）
+   ========================================================================= */
+canvas.addEventListener('pointerdown', function (e) {
+  if (G.state !== 'playing' || G.dragging || !G.currentBird) return;
+  const p = toWorld(e);
+  const b = G.currentBird;
+  const d = len(p.x - b.x, p.y - b.y);
+  if (d < 145) {
+    G.dragging = true;
+    try { canvas.setPointerCapture(e.pointerId); } catch (err) {}
+    setBirdFromPointer(p.x, p.y);
+    e.preventDefault();
+  }
+}, { passive: false });
+
+canvas.addEventListener('pointermove', function (e) {
+  if (!G.dragging || !G.currentBird) return;
+  const p = toWorld(e);
+  setBirdFromPointer(p.x, p.y);
+  e.preventDefault();
+}, { passive: false });
+
+function releaseDrag(e) {
+  if (!G.dragging || !G.currentBird) return;
+  G.dragging = false;
+  const b = G.currentBird;
+  const dx = SLING.x - b.x, dy = SLING.y - b.y;
+  const stretch = len(dx, dy);
+
+  if (stretch < MIN_STRETCH) {
+    // 拉伸不足，小鸟归位
+    b.x = SLING.x; b.y = SLING.y;
+    return;
+  }
+  // 拉伸越界时按最大拉力截断，保证力度有上限
+  const k = Math.min(stretch, MAX_STRETCH) / stretch;
+  launchBird(dx * k * LAUNCH_POWER, dy * k * LAUNCH_POWER);
+  if (e) e.preventDefault();
+}
+
+canvas.addEventListener('pointerup', releaseDrag, { passive: false });
+canvas.addEventListener('pointercancel', releaseDrag, { passive: false });
+window.addEventListener('blur', function () {
+  if (G.dragging && G.currentBird) {
+    G.currentBird.x = SLING.x;
+    G.currentBird.y = SLING.y;
+    G.dragging = false;
+  }
+});
+
+// 键盘 R 键快速重开
+window.addEventListener('keydown', function (e) {
+  if (e.key === 'r' || e.key === 'R') {
+    if (G.state !== 'menu') startGame();
+  }
+});
+
+/* =========================================================================
+   19. 界面与流程控制
+   ========================================================================= */
+const startScreen = document.getElementById('startScreen');
+const endScreen = document.getElementById('endScreen');
+const endTitle = document.getElementById('endTitle');
+const stPigs = document.getElementById('stPigs');
+const stWood = document.getElementById('stWood');
+const stStone = document.getElementById('stStone');
+const stBonus = document.getElementById('stBonus');
+const stTotal = document.getElementById('stTotal');
+
+function showStartScreen() {
+  G.state = 'menu';
+  startScreen.classList.remove('hidden');
+  endScreen.classList.add('hidden');
+}
+function hideScreens() {
+  startScreen.classList.add('hidden');
+  endScreen.classList.add('hidden');
+}
+
+function showEndScreen(win, bonus) {
+  endScreen.classList.remove('hidden');
+  endTitle.textContent = win ? '胜 利 ！' : '失 败';
+  endTitle.className = win ? 'result-win' : 'result-lose';
+  stPigs.textContent  = G.kills.pig   + ' × ' + SCORE.pig;
+  stWood.textContent  = G.kills.wood  + ' × ' + SCORE.wood;
+  stStone.textContent = G.kills.stone + ' × ' + SCORE.stone;
+  stBonus.textContent = Math.round(bonus / SCORE.birdBonus) + ' × ' + SCORE.birdBonus;
+  stTotal.textContent = G.score;
+}
+
+function endGame(win) {
+  if (G.state !== 'playing') return;
+  G.state = win ? 'win' : 'lose';
+
+  let bonus = 0;
+  if (win) {
+    // 结算时剩余小鸟转化为奖励分
+    const left = Math.max(0, G.birdsTotal - G.birdsUsed);
+    bonus = left * SCORE.birdBonus;
+    G.score += bonus;
+  }
+  showEndScreen(win, bonus);
+}
+
+function startGame() {
+  G.state = 'playing';
+  G.score = 0;
+  G.birdsUsed = 0;
+  G.birdsTotal = LEVEL_1.birds;
+  G.pigsLeft = 0;
+  G.bodies = [];
+  G.particles = [];
+  G.floaters = [];
+  G.trail = [];
+  G.currentBird = null;
+  G.flyingBird = null;
+  G.dragging = false;
+  G.restTimer = 0;
+  G.flightTime = 0;
+  G.endTimer = 0;
+  G.shake = 0;
+  G.kills = { pig: 0, wood: 0, stone: 0 };
+
+  buildLevel(LEVEL_1);
+  loadBird();
+  hideScreens();
+}
+
+document.getElementById('btnStart').addEventListener('click', function (e) {
+  e.preventDefault();
+  startGame();
+});
+document.getElementById('btnRestart').addEventListener('click', function (e) {
+  e.preventDefault();
+  startGame();
+});
+
+/* =========================================================================
+   20. 主循环（固定步长物理 + 累加器）
+   ========================================================================= */
+let lastTime = performance.now();
+let accumulator = 0;
+
+function loop(now) {
+  let dt = (now - lastTime) / 1000;
+  lastTime = now;
+  if (dt > 0.1) dt = 0.1;               // 切标签页回来时避免"物理爆炸"
+  accumulator += dt;
+
+  let guard = 0;
+  while (accumulator >= FIXED_DT && guard < 5) {
+    update(FIXED_DT);
+    accumulator -= FIXED_DT;
+    guard++;
+  }
+  if (guard >= 5) accumulator = 0;
+
+  render();
+  requestAnimationFrame(loop);
+}
+
+/* =========================================================================
+   21. 启动
+   ========================================================================= */
+resize();
+// 菜单状态也先构建关卡，作为背景展示
+buildLevel(LEVEL_1);
+showStartScreen();
+requestAnimationFrame(loop);
+
+})();
+</script>
+</body>
+</html>

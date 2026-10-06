@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>快速诊断</title>
+</head>
+<body>
+  <h1>游戏诊断</h1>
+  <div id="output"></div>
+  <script type="module">
+    const output = document.getElementById('output');
+
+    async function diagnose() {
+      try {
+        output.innerHTML += '1. 测试模块导入...<br>';
+
+        const { GameState } = await import('/src/game/GameState.js');
+        output.innerHTML += '✓ GameState 导入成功<br>';
+
+        const { Renderer } = await import('/src/game/Renderer.js');
+        output.innerHTML += '✓ Renderer 导入成功<br>';
+
+        const { characterTypes } = await import('/src/game/CharacterTypes.js');
+        output.innerHTML += '✓ characterTypes 导入成功 (数量: ' + characterTypes.length + ')<br>';
+
+        const { zombieTypes } = await import('/src/game/ZombieTypes.js');
+        output.innerHTML += '✓ zombieTypes 导入成功 (数量: ' + zombieTypes.length + ')<br>';
+
+        output.innerHTML += '<br>2. 测试GameState实例化...<br>';
+        const gameState = new GameState(800, 600);
+        output.innerHTML += '✓ GameState 创建成功<br>';
+        output.innerHTML += '  - 初始资源: ' + gameState.resources + '<br>';
+        output.innerHTML += '  - 网格: ' + gameState.rows + 'x' + gameState.cols + '<br>';
+
+        output.innerHTML += '<br>3. 测试update...<br>';
+        gameState.update();
+        output.innerHTML += '✓ update() 执行成功<br>';
+
+        output.innerHTML += '<br>4. 测试Canvas...<br>';
+        const canvas = document.createElement('canvas');
+        canvas.width = 800;
+        canvas.height = 600;
+        const renderer = new Renderer(canvas, gameState);
+        output.innerHTML += '✓ Renderer 创建成功<br>';
+
+        renderer.render();
+        output.innerHTML += '✓ render() 执行成功<br>';
+
+        output.innerHTML += '<br><strong style="color:green;">所有测试通过！游戏应该可以正常运行。</strong><br>';
+        output.innerHTML += '<br><a href="/" style="font-size:20px; padding:10px 20px; background:#4CAF50; color:white; text-decoration:none; border-radius:5px;">返回游戏首页</a>';
+
+      } catch (error) {
+        output.innerHTML += '<br><strong style="color:red;">错误: ' + error.message + '</strong><br>';
+        output.innerHTML += '<pre>' + error.stack + '</pre>';
+      }
+    }
+
+    diagnose();
+  </script>
+</body>
+</html>

@@ -1,0 +1,29 @@
+# 勿提交敏感信息
+.env
+
+# 编辑器和 IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# 操作系统
+.DS_Store
+Thumbs.db
+
+# 日志文件
+*.log
+
+# 临时文件
+tmp/
+temp/
+
+# Node modules (如果以后添加)
+node_modules/
+package-lock.json
+yarn.lock
+
+# 构建输出 (如果以后添加构建工具)
+dist/
+build/

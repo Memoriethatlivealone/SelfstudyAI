@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>番茄时钟 - Pomodoro Timer</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>🍅 番茄时钟</h1>
+
+        <div class="mode-selector">
+            <button class="mode-btn active" data-mode="pomodoro">专注</button>
+            <button class="mode-btn" data-mode="short-break">短休息</button>
+            <button class="mode-btn" data-mode="long-break">长休息</button>
+        </div>
+
+        <div class="timer-display">
+            <span id="minutes">25</span>:<span id="seconds">00</span>
+        </div>
+
+        <div class="controls">
+            <button id="start-btn" class="control-btn primary">开始</button>
+            <button id="reset-btn" class="control-btn">重置</button>
+        </div>
+
+        <div class="stats">
+            <div class="stat-item">
+                <span class="stat-label">完成番茄钟</span>
+                <span class="stat-value" id="completed-count">0</span>
+            </div>
+        </div>
+
+        <div class="settings">
+            <h3>⚙️ 设置</h3>
+            <div class="setting-item">
+                <label for="pomodoro-time">专注时长（分钟）</label>
+                <input type="number" id="pomodoro-time" min="1" max="60" value="25">
+            </div>
+            <div class="setting-item">
+                <label for="short-break-time">短休息时长（分钟）</label>
+                <input type="number" id="short-break-time" min="1" max="30" value="5">
+            </div>
+            <div class="setting-item">
+                <label for="long-break-time">长休息时长（分钟）</label>
+                <input type="number" id="long-break-time" min="1" max="60" value="15">
+            </div>
+            <div class="setting-item">
+                <label>
+                    <input type="checkbox" id="auto-start-breaks" checked>
+                    自动开始休息
+                </label>
+            </div>
+            <div class="setting-item">
+                <label>
+                    <input type="checkbox" id="enable-sound" checked>
+                    启用提醒音
+                </label>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

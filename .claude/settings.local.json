@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Skill(claude-api)",
+      "Read(//c/Users/18516/Downloads/**)",
+      "Bash(unzip -q openclaw-persona-forge.zip)",
+      "Bash(python *)",
+      "Bash(gh api *)",
+      "Bash(ant auth *)"
+    ]
+  }
+}

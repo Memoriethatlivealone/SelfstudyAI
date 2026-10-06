@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>奶龙大战僵尸</title>
+  <link rel="stylesheet" href="/src/styles/main.css">
+</head>
+<body>
+  <div id="app">
+    <!-- 开始界面 -->
+    <div id="start-screen" class="screen">
+      <h1 class="game-title">🐉 奶龙大战僵尸 🧟</h1>
+      <div class="game-description">
+        <p>僵尸大军正在入侵！部署你的奶龙战士来保卫家园！</p>
+        <div class="instructions">
+          <h3>游戏说明：</h3>
+          <ul>
+            <li>点击左侧角色卡片，再点击地图格子部署奶龙</li>
+            <li>奶龙会自动攻击同一路线上的僵尸</li>
+            <li>点击地图上的阳光图标收集资源</li>
+            <li>阻止僵尸到达地图左侧！</li>
+            <li>完成10波进攻即可获胜</li>
+          </ul>
+          <div class="controls-info">
+            <h4>操作方式：</h4>
+            <p>🖱️ 鼠标左键：选择和放置角色、收集资源</p>
+            <p>🖱️ 鼠标右键：取消当前选择</p>
+            <p>⌨️ P键：暂停/继续游戏</p>
+            <p>⌨️ R键：重新开始游戏</p>
+            <p>⌨️ Esc键：取消当前选择</p>
+          </div>
+        </div>
+      </div>
+      <button id="start-btn" class="btn btn-primary">开始游戏</button>
+    </div>
+
+    <!-- 游戏界面 -->
+    <div id="game-screen" class="screen" style="display: none;">
+      <!-- 顶部信息栏 -->
+      <div class="game-header">
+        <div class="resource-display">
+          <span class="sun-icon">☀️</span>
+          <span id="resource-count">100</span>
+        </div>
+        <div class="wave-display">
+          <span>波次：<span id="wave-count">1</span></span>
+          <span>击败：<span id="kill-count">0</span></span>
+        </div>
+        <div class="control-buttons">
+          <button id="pause-btn" class="btn btn-small">⏸️ 暂停</button>
+          <button id="restart-btn" class="btn btn-small">🔄 重新开始</button>
+          <button id="sound-toggle" class="btn btn-small">🔊 音效</button>
+        </div>
+      </div>
+
+      <!-- 游戏主体 -->
+      <div class="game-container">
+        <!-- 角色卡片栏 -->
+        <div id="card-panel" class="card-panel">
+          <!-- 动态生成角色卡片 -->
+        </div>
+
+        <!-- 游戏画布 -->
+        <div class="canvas-container">
+          <canvas id="game-canvas"></canvas>
+          <div id="hover-tooltip" class="hover-tooltip"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 暂停界面 -->
+    <div id="pause-screen" class="screen overlay" style="display: none;">
+      <div class="panel">
+        <h2>游戏已暂停</h2>
+        <button id="resume-btn" class="btn btn-primary">继续游戏</button>
+        <button id="restart-from-pause-btn" class="btn btn-secondary">重新开始</button>
+      </div>
+    </div>
+
+    <!-- 胜利界面 -->
+    <div id="victory-screen" class="screen overlay" style="display: none;">
+      <div class="panel">
+        <h2 class="victory-title">🎉 胜利！🎉</h2>
+        <p class="result-text">恭喜你成功防御了僵尸大军！</p>
+        <p>完成波次：<span id="final-wave"></span></p>
+        <p>击败僵尸：<span id="final-kills"></span></p>
+        <button id="restart-from-victory-btn" class="btn btn-primary">再玩一次</button>
+      </div>
+    </div>
+
+    <!-- 失败界面 -->
+    <div id="defeat-screen" class="screen overlay" style="display: none;">
+      <div class="panel">
+        <h2 class="defeat-title">💀 失败 💀</h2>
+        <p class="result-text">僵尸突破了防线...</p>
+        <p>完成波次：<span id="defeat-wave"></span></p>
+        <p>击败僵尸：<span id="defeat-kills"></span></p>
+        <button id="restart-from-defeat-btn" class="btn btn-primary">重新挑战</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>

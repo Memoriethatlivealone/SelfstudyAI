@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>功能测试 - 智能导航系统</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', sans-serif;
+            max-width: 900px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .test-container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #667eea;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 10px;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            background: #f8f9fa;
+            border-left: 4px solid #667eea;
+            border-radius: 5px;
+        }
+        .test-item {
+            margin: 10px 0;
+            padding: 10px;
+            background: white;
+            border-radius: 5px;
+        }
+        .status {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 3px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        .status.pass { background: #d4edda; color: #155724; }
+        .status.fail { background: #f8d7da; color: #721c24; }
+        .status.pending { background: #fff3cd; color: #856404; }
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            margin: 5px;
+        }
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+        .link {
+            display: inline-block;
+            margin: 20px 0;
+            padding: 15px 30px;
+            background: #667eea;
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: bold;
+        }
+        .link:hover {
+            background: #764ba2;
+        }
+        pre {
+            background: #272822;
+            color: #f8f8f2;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+        }
+        .info {
+            background: #d1ecf1;
+            border-left: 4px solid #0c5460;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>🧪 智能导航系统 - 功能测试</h1>
+
+        <div class="info">
+            <strong>📌 测试说明：</strong> 此页面用于验证导航系统的各项功能是否正常工作。
+        </div>
+
+        <a href="index.html" class="link">🚀 打开导航系统主页</a>
+
+        <div class="test-section">
+            <h2>✅ 系统检查</h2>
+
+            <div class="test-item">
+                <strong>浏览器支持：</strong>
+                <span class="status" id="browser-status">检测中...</span>
+                <div id="browser-info"></div>
+            </div>
+
+            <div class="test-item">
+                <strong>Geolocation API：</strong>
+                <span class="status" id="geo-status">检测中...</span>
+                <button onclick="testGeolocation()">测试定位</button>
+                <div id="geo-info"></div>
+            </div>
+
+            <div class="test-item">
+                <strong>Leaflet.js 加载：</strong>
+                <span class="status" id="leaflet-status">检测中...</span>
+                <div id="leaflet-info"></div>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h2>🌐 网络服务检查</h2>
+
+            <div class="test-item">
+                <strong>OpenStreetMap 瓦片服务：</strong>
+                <span class="status" id="osm-status">未测试</span>
+                <button onclick="testOSM()">测试连接</button>
+                <div id="osm-info"></div>
+            </div>
+
+            <div class="test-item">
+                <strong>Nominatim 搜索服务：</strong>
+                <span class="status" id="nominatim-status">未测试</span>
+                <button onclick="testNominatim()">测试搜索</button>
+                <div id="nominatim-info"></div>
+            </div>
+
+            <div class="test-item">
+                <strong>OSRM 路线服务：</strong>
+                <span class="status" id="osrm-status">未测试</span>
+                <button onclick="testOSRM()">测试路线</button>
+                <div id="osrm-info"></div>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h2>📋 快速测试用例</h2>
+
+            <div class="test-item">
+                <strong>测试场景 1：北京市内导航</strong><br>
+                起点：天安门<br>
+                终点：北京站<br>
+                <button onclick="openWithParams('天安门', '北京站')">使用此场景测试</button>
+            </div>
+
+            <div class="test-item">
+                <strong>测试场景 2：上海市内导航</strong><br>
+                起点：外滩<br>
+                终点：东方明珠<br>
+                <button onclick="openWithParams('外滩', '东方明珠')">使用此场景测试</button>
+            </div>
+
+            <div class="test-item">
+                <strong>测试场景 3：自定义位置</strong><br>
+                <input type="text" id="custom-start" placeholder="输入起点" style="padding: 8px; width: 200px; margin: 5px;">
+                <input type="text" id="custom-end" placeholder="输入终点" style="padding: 8px; width: 200px; margin: 5px;">
+                <button onclick="openCustom()">测试</button>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h2>📝 功能清单</h2>
+            <ul>
+                <li>✅ 地图显示和交互（缩放、拖动）</li>
+                <li>✅ 地点搜索（中文地名支持）</li>
+                <li>✅ 路线规划（驾车、步行、骑行）</li>
+                <li>✅ 距离和时间预估</li>
+                <li>✅ 当前位置获取</li>
+                <li>✅ 地图点选起点终点</li>
+                <li>✅ 路线可视化显示</li>
+                <li>✅ 错误处理和提示</li>
+                <li>✅ 响应式布局</li>
+                <li>✅ 加载状态显示</li>
+            </ul>
+        </div>
+
+        <div class="info">
+            <strong>💡 提示：</strong> 如果测试失败，请检查：
+            <ol>
+                <li>是否使用本地服务器运行（推荐 http://localhost:8000）</li>
+                <li>网络连接是否正常</li>
+                <li>浏览器控制台是否有错误信息</li>
+                <li>浏览器是否允许定位权限（HTTPS 或 localhost）</li>
+            </ol>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        // 浏览器检查
+        function checkBrowser() {
+            const status = document.getElementById('browser-status');
+            const info = document.getElementById('browser-info');
+
+            const browser = navigator.userAgent;
+            const isModern = 'fetch' in window && 'Promise' in window;
+
+            if (isModern) {
+                status.textContent = '通过';
+                status.className = 'status pass';
+                info.innerHTML = '<small>✓ 浏览器支持所需的现代特性</small>';
+            } else {
+                status.textContent = '失败';
+                status.className = 'status fail';
+                info.innerHTML = '<small>✗ 浏览器版本过旧，请升级</small>';
+            }
+        }
+
+        // 测试定位
+        function testGeolocation() {
+            const status = document.getElementById('geo-status');
+            const info = document.getElementById('geo-info');
+
+            if (!navigator.geolocation) {
+                status.textContent = '不支持';
+                status.className = 'status fail';
+                info.innerHTML = '<small>✗ 浏览器不支持定位功能</small>';
+                return;
+            }
+
+            status.textContent = '测试中...';
+            status.className = 'status pending';
+
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    status.textContent = '通过';
+                    status.className = 'status pass';
+                    info.innerHTML = `<small>✓ 定位成功<br>位置: ${position.coords.latitude.toFixed(6)}, ${position.coords.longitude.toFixed(6)}<br>精度: ±${Math.round(position.coords.accuracy)}米</small>`;
+                },
+                (error) => {
+                    status.textContent = '失败';
+                    status.className = 'status fail';
+                    let msg = '定位失败';
+                    if (error.code === 1) msg = '✗ 定位权限被拒绝';
+                    else if (error.code === 2) msg = '✗ 位置信息不可用';
+                    else if (error.code === 3) msg = '✗ 定位超时';
+                    info.innerHTML = `<small>${msg}</small>`;
+                }
+            );
+        }
+
+        // 检查 Leaflet
+        function checkLeaflet() {
+            const status = document.getElementById('leaflet-status');
+            const info = document.getElementById('leaflet-info');
+
+            if (typeof L !== 'undefined') {
+                status.textContent = '通过';
+                status.className = 'status pass';
+                info.innerHTML = `<small>✓ Leaflet.js 加载成功 (版本 ${L.version})</small>`;
+            } else {
+                status.textContent = '失败';
+                status.className = 'status fail';
+                info.innerHTML = '<small>✗ Leaflet.js 加载失败</small>';
+            }
+        }
+
+        // 测试 OSM
+        async function testOSM() {
+            const status = document.getElementById('osm-status');
+            const info = document.getElementById('osm-info');
+
+            status.textContent = '测试中...';
+            status.className = 'status pending';
+
+            try {
+                const response = await fetch('https://tile.openstreetmap.org/0/0/0.png');
+                if (response.ok) {
+                    status.textContent = '通过';
+                    status.className = 'status pass';
+                    info.innerHTML = '<small>✓ OpenStreetMap 瓦片服务可用</small>';
+                } else {
+                    throw new Error('HTTP ' + response.status);
+                }
+            } catch (error) {
+                status.textContent = '失败';
+                status.className = 'status fail';
+                info.innerHTML = `<small>✗ 连接失败: ${error.message}</small>`;
+            }
+        }
+
+        // 测试 Nominatim
+        async function testNominatim() {
+            const status = document.getElementById('nominatim-status');
+            const info = document.getElementById('nominatim-info');
+
+            status.textContent = '测试中...';
+            status.className = 'status pending';
+
+            try {
+                const url = 'https://nominatim.openstreetmap.org/search?q=北京&format=json&limit=1';
+                const response = await fetch(url);
+                const data = await response.json();
+
+                if (data && data.length > 0) {
+                    status.textContent = '通过';
+                    status.className = 'status pass';
+                    info.innerHTML = `<small>✓ Nominatim 搜索服务可用<br>测试搜索 "北京": ${data[0].display_name}</small>`;
+                } else {
+                    throw new Error('无搜索结果');
+                }
+            } catch (error) {
+                status.textContent = '失败';
+                status.className = 'status fail';
+                info.innerHTML = `<small>✗ 连接失败: ${error.message}</small>`;
+            }
+        }
+
+        // 测试 OSRM
+        async function testOSRM() {
+            const status = document.getElementById('osrm-status');
+            const info = document.getElementById('osrm-info');
+
+            status.textContent = '测试中...';
+            status.className = 'status pending';
+
+            try {
+                // 测试北京天安门到故宫的路线
+                const url = 'https://router.project-osrm.org/route/v1/driving/116.397428,39.909187;116.403119,39.916668?overview=false';
+                const response = await fetch(url);
+                const data = await response.json();
+
+                if (data.code === 'Ok' && data.routes && data.routes.length > 0) {
+                    const route = data.routes[0];
+                    const distance = (route.distance / 1000).toFixed(2);
+                    const duration = Math.round(route.duration / 60);
+
+                    status.textContent = '通过';
+                    status.className = 'status pass';
+                    info.innerHTML = `<small>✓ OSRM 路线服务可用<br>测试路线: 距离 ${distance}km, 时间约 ${duration}分钟</small>`;
+                } else {
+                    throw new Error('路线规划失败');
+                }
+            } catch (error) {
+                status.textContent = '失败';
+                status.className = 'status fail';
+                info.innerHTML = `<small>✗ 连接失败: ${error.message}</small>`;
+            }
+        }
+
+        // 使用参数打开
+        function openWithParams(start, end) {
+            const url = `index.html?start=${encodeURIComponent(start)}&end=${encodeURIComponent(end)}`;
+            window.open(url, '_blank');
+        }
+
+        // 自定义测试
+        function openCustom() {
+            const start = document.getElementById('custom-start').value;
+            const end = document.getElementById('custom-end').value;
+            if (start && end) {
+                openWithParams(start, end);
+            } else {
+                alert('请输入起点和终点');
+            }
+        }
+
+        // 页面加载时执行检查
+        window.addEventListener('load', () => {
+            checkBrowser();
+
+            setTimeout(() => {
+                checkLeaflet();
+
+                const geoStatus = document.getElementById('geo-status');
+                if (navigator.geolocation) {
+                    geoStatus.textContent = '支持';
+                    geoStatus.className = 'status pass';
+                    document.getElementById('geo-info').innerHTML = '<small>✓ 浏览器支持定位，点击按钮测试</small>';
+                } else {
+                    geoStatus.textContent = '不支持';
+                    geoStatus.className = 'status fail';
+                    document.getElementById('geo-info').innerHTML = '<small>✗ 浏览器不支持定位功能</small>';
+                }
+            }, 500);
+        });
+    </script>
+</body>
+</html>
