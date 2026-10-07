@@ -1,0 +1,15 @@
+# 所有子文件夹里的 node_modules 全部忽略
+**/node_modules/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# 环境变量
+.env
+.venv/
+
+# VSCode
+.vscode/
